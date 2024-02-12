@@ -3,6 +3,7 @@ package rain.rndr
 import rain.utils.*
 import org.openrndr.Program
 import org.openrndr.animatable.Animatable
+import org.openrndr.animatable.easing.Easing
 import rain.interfaces.ContextInterface
 import rain.language.LocalContext
 
@@ -15,7 +16,7 @@ import rain.language.LocalContext
 // TODO maybe: consider whether a trigger would ever be reused...
 //  that could be an interesting idea with creative possibilities...
 
-
+// TODO: maybe Act is only an interface? (and that way, not all Acts have to be Animatable
 abstract class Act(
 
     val name: String = autoKey(),
@@ -38,6 +39,23 @@ abstract class Act(
 
     var dur: Double = 0.0 // TODO: how is this contolled?
     var isRunning: Boolean = false // TODO: used?
+
+    open fun trigger(properties: Map<String, Any?> = mapOf()) {
+        isRunning = true
+    } // called if re-triggering existing act
+
+    fun triggerValue(valueName: String, valueAct:ValueAct, properties: Map<String, Any?>) {
+        properties[valueName]?.let { value ->
+            valueAct.trigger(
+                mapOf(
+                "value" to value,
+                "dur" to (properties["dur"] ?: 0.0),
+                "animate" to properties["$valueName:animate"]
+                )
+            )
+        }
+    }
+
 
 //    fun <T>createActProperty(name: String, relationshipLabel: String? = null): ActProperty<T> {
 //        return ActProperty(name, this, relationshipLabel)
@@ -80,7 +98,30 @@ abstract class Act(
 
 open class ValueAct(
     name: String = autoKey(),
-    var value: Double = 0.0
+    var value: Double = 0.0,
 ): Act(name) {
+
+    // TODO maybe: combine with animate() method below?
+    override fun trigger(properties: Map<String, Any?>) {
+        super.trigger(properties)
+
+        (properties["value"] as Double?)?.let {it ->
+            val time = ((properties["dur"] ?: 0.0 ) as Double * 1000.0).toLong()
+            val easing: String? = properties["animate"] as String?
+
+            if (easing !=null && time > 0) {
+                animate(it, time, Easing.valueOf(easing!!))
+            } else {
+                value = it
+            }
+        }
+
+    }
+
+    fun animate(targetValue: Double, time:Long, easing:Easing) {
+        println("YO ANIMATE: $name to $targetValue over $time ms")
+        ::value.animate(targetValue, time, easing)
+        ::value.complete()
+    }
 
 }

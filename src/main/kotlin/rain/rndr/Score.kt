@@ -39,19 +39,31 @@ class Score(
 //        return act
 //    }
 
-    private fun createTrigger(time:Double, properties: Map<String, Any?>) {
+    fun createTrigger(
+        time:Double,
+        properties: Map<String, Any?>,
+        machine: RndrMachine<*> = machinePalette[properties["machine"] as String] as RndrMachine<Act>
+    ): Trigger {
         val triggerList = timeCodes.getOrPut(time) {mutableListOf()}
 
         //TODO: accommodate triggering existing act (updating it)
-        val machine = machinePalette[properties["machine"] as String] as RndrMachine<Act>
-        val trigger = Trigger(this, machine, null, time, properties)
+        val trigger = Trigger(this, machine, time, properties)
 
-        // TODO: consider creating act here upfront (as opposed to during animation)
+        trigger.setAct()
+
         triggerList.add(trigger)
+        return trigger
     }
 
+    fun addAct(act: Act) {
+        this.acts[act.name] = act
+    }
+
+    fun getAct(name: String): Act? = this.acts[name]
+
     // TODO: test and document ... also, should this be the public method, or should it be something else?
-    fun createTriggers(pattern: CellPattern, runningTime:Double=0.0): Double {
+    //  ... could combine with play, and make this private
+    private fun createTriggers(pattern: CellPattern, runningTime:Double=0.0): Double {
 
         // TODO: refactor and simplify this logic...? (also look at old python code)
         var patternDur = 0.0
@@ -84,15 +96,23 @@ class Score(
         return runningTime + patternDur
     }
 
-    fun reset() {
-        acts.clear()
+    fun readPattern(pattern: CellPattern) {
         timeCodes.clear()
+        acts.clear()
+        createTriggers(pattern)
     }
 
     fun play() = application {
-        reset()
+
         var prevTriggerTime = 0.0
 //        println(timeCodes.toSortedMap())
+
+        timeCodes.forEach{
+            println(it.key.toString() + ":")
+            it.value.forEach {
+                println("   " + it.actName + ": " + it.properties.toString())
+            }
+        }
 
         program {
 
@@ -104,11 +124,15 @@ class Score(
                     launch {
                         triggerList.forEach { tr: Trigger ->
 
-                            tr.rndrMachine.actFactory?.invoke(tr)?.let { act ->
-                                acts[act.name] = act
-                                act.isRunning = true
-                                println("starting: " + act.toString())
-                            }
+                            tr.trigger()
+
+                            // NOTE: moved below  to the point of tigger creation...
+
+//                            tr.rndrMachine.actFactory?.invoke(tr)?.let { act ->
+//                                addAct(act)
+//                                act.isRunning = true
+//                                println("starting: " + act.toString())
+//                            }
 
 //                            if (action is Act) {
 //                                action.start()
@@ -128,11 +152,15 @@ class Score(
                 }
             }
 
+            println("ACT SIZE: " + acts.size.toString())
+
             extend {
 
                 // TODO: need to worry about acts ordering?
-                acts.forEach { act ->
-
+                acts.filter { it.value.isRunning }.forEach {
+                    val act = it.value
+                    act.updateAnimation()
+                    act.render(this@Score, this)
                 }
 
                 // DO NOTHING?

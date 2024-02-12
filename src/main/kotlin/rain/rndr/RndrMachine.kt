@@ -55,6 +55,10 @@ fun <T:Act>createRndrMachine(key:String= autoKey(),  single:Boolean=true, factor
 
 fun createValues(single:Boolean=true, vararg keys: String) {
     keys.forEach { k ->
-        createRndrMachine(k, single) { ValueAct() }
+        createRndrMachine(k, single) {
+            ValueAct(
+                name = it.actName,
+                value=it.propertyAs("value")  ?: 0.0 )
+        }
     }
 }

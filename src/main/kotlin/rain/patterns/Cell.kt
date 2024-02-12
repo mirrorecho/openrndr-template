@@ -34,11 +34,21 @@ open class Cell(
         traverseNames.add(key)
     }
 
+    fun make(machine:String? = null, act:String? = machine, callback:(cell:Cell)->Unit): Cell {
+        machine?.let { this.setVeinCycle("machine", it) }
+        act?.let { this.setVeinCycle("act", it) }
+        callback(this)
+        this.createMe() // TODO: verify, should this be moved first?
+        return this
+    }
+
     // the following probably not even needed since dur.sum() is so easy!
 //    val sumDur: Double get() = dur.sum()
 
     override var dur: Sequence<Double> by this.properties
-    override var machine: Sequence<String> by this.properties
+
+    override var machine: Sequence<String?> by this.properties
+
     val gate: Sequence<Boolean> by this.properties.apply { putIfAbsent("gate", cycleOf(false)) }
 
 //    val dur: Sequence<Int> = sequenceOf(1).cycle()
@@ -79,7 +89,7 @@ open class Cell(
         while (returning) {
             val returnMap = mutableMapOf<String, Any?>()
             namesIterators.filter {it.second != null}.forEach {
-                if (it.second!!.hasNext()) returnMap[it.first] = it.second!!.next() as Any
+                if (it.second!!.hasNext()) returnMap[it.first] = it.second!!.next()
                 else returning = false
             }
             if (returning) yield(returnMap)

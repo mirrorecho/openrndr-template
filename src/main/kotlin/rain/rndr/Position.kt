@@ -1,9 +1,11 @@
 package rain.rndr
 
+import org.openrndr.Program
 import org.openrndr.math.Vector2
 import rain.interfaces.ContextInterface
 import rain.language.LocalContext
 import rain.language.Relationship
+import rain.utils.autoKey
 
 open class Position(
     name:String = rain.utils.autoKey(),
@@ -21,8 +23,22 @@ open class Position(
 //    }
 
     // TODO: accommodate local storage
-    fun vector(): Vector2 = Vector2(
-        x.value,
-        y.value,
+    fun vector(program: Program): Vector2 = Vector2(
+        x.value * program.width,
+        y.value * program.height,
     )
+}
+
+fun positionMachine(key:String= autoKey(), single:Boolean=true,
+                 xKey:String = "X",
+                 yKey:String = "Y",
+): RndrMachine<Position> {
+    return createRndrMachine(key, single) { tr ->
+        // TODO: determine defaults?
+        Position(
+            name = tr.actName,
+            x = tr.relatedAct("X"), // NOTE: this is set at the machine level above
+            y = tr.relatedAct("Y", properties = mapOf("value" to 0.5)),
+        )
+    }.apply { relate("X", xKey); relate("Y", yKey); }
 }

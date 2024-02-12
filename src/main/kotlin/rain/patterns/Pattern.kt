@@ -67,7 +67,7 @@ interface CellPattern:Pattern {
     // the following probably not even needed since dur.sum() is so easy!
 //    val sumDur: Double get() = dur.sum()
 
-    var machine:Sequence<String>
+    var machine:Sequence<String?>
         get() = propertyByVein("machine")
         set(values) { throw NotImplementedError() }
 }
