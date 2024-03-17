@@ -8,13 +8,13 @@ import rain.utils.autoKey
 open class Circle(
     name:String = rain.utils.autoKey(),
 
-    var radius: ValueAct = ValueAct(),
+    var radius: Value = Value(),
     var position: Position = Position(),
     var strokeColor: Color = Color(),
-    var strokeWeight: ValueAct = ValueAct(),
+    var strokeWeight: Value = Value(),
     var fillColor: Color? = null,
 
-): Act(name) {
+    ): Act(name) {
 
     // TODO MAYBE: a base drawing class with standard attributes like color, position, etc.
 
@@ -35,9 +35,9 @@ open class Circle(
     //  - OR collections of values (from this node's properties)
     // TODO: or maybe by lazy is not ideal here? think about it...
 
-    override fun trigger(properties: Map<String, Any?>) {
-        super.trigger(properties)
-        triggerValue("radius", radius, properties)
+    override fun triggerMe(trigger: Trigger) {
+        super.triggerMe(trigger)
+        triggerValue("RADIUS", radius, trigger)
 
 //        val fo = relatedActs["RADIUS"]
 //        fo?.invoke()?.trigger(properties)
@@ -79,10 +79,11 @@ fun circleMachine(
             name = tr.actName,
             // TODO: simplify this argument assignment below
             radius = tr.relatedAct("RADIUS",
-                properties = mapOf(
-                    "value" to tr.properties["radius"],
-                    "animate" to tr.properties["radius:animate"]
-                ),
+                // TODO: what to do about the below?
+//                properties = mapOf(
+//                    "value" to tr.properties["RADIUS"],
+//                    "animate" to tr.properties["RADIUS:animate"]
+//                ),
             ),
             position = tr.relatedAct("POSITION"),
             strokeColor = tr.relatedAct("STROKE_COLOR"),

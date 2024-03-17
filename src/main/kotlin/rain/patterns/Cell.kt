@@ -23,23 +23,25 @@ open class Cell(
     val traverseNames: MutableSet<String> by this.properties.apply { putIfAbsent("traverseNames", mutableSetOf("dur", "machine")) }
 
     // TODO move the next two functions to be able to apply to any pattern?
-    // .. and figure out how to automate?
-    fun setVeins(key:String, vararg values: Any?) {
-        this.properties[key] = sequenceOf(*values)
-        traverseNames.add(key)
+    //  .. and figure out how to automate?
+//      .. and naming?
+    fun vein(key:String): Vein {
+        return Vein(this, key)
+    }
+
+    fun ani( // just a shortcut (since this will be used so much!)
+        value:Double,
+        dur:Double? = 0.0, // 0.0 defaults to length of the event's dur (null is no animation)
+        easing: String? = null,
+        initValue:Double? = null, // TODO, consider implementing
+    ): AnimateEvent {
+
+        return AnimateEvent(value, dur, easing, initValue)
     }
 
     fun setVeinCycle(key:String, vararg values: Any?) {
         this.properties[key] = cycleOf(*values)
         traverseNames.add(key)
-    }
-
-    fun make(machine:String? = null, act:String? = machine, callback:(cell:Cell)->Unit): Cell {
-        machine?.let { this.setVeinCycle("machine", it) }
-        act?.let { this.setVeinCycle("act", it) }
-        callback(this)
-        this.createMe() // TODO: verify, should this be moved first?
-        return this
     }
 
     // the following probably not even needed since dur.sum() is so easy!
@@ -97,3 +99,26 @@ open class Cell(
     }
 
 }
+
+// TODO: play around with this... esp. with property heritage!
+fun cell(
+    key:String = rain.utils.autoKey(),
+    machine:String? = null,
+    act:String? = machine,
+    properties: Map<String, Any?> = mapOf(),
+    context: ContextInterface = LocalContext,
+    callback: Cell.()->Unit
+):Cell {
+    Cell(key, properties, context).apply {
+        machine?.let { setVeinCycle("machine", it) }
+        act?.let { setVeinCycle("act", it) }
+        apply(callback)
+        createMe() // TODO: verify, should this be moved first?
+        return this
+    }
+}
+
+
+
+
+

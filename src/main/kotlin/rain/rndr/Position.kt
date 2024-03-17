@@ -2,15 +2,12 @@ package rain.rndr
 
 import org.openrndr.Program
 import org.openrndr.math.Vector2
-import rain.interfaces.ContextInterface
-import rain.language.LocalContext
-import rain.language.Relationship
 import rain.utils.autoKey
 
 open class Position(
     name:String = rain.utils.autoKey(),
-    var x: ValueAct = ValueAct(),
-    var y: ValueAct = ValueAct(),
+    var x: Value = Value(),
+    var y: Value = Value(),
 ): Act(name) {
 
     // TODO: what was the idea of the below method?

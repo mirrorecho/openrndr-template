@@ -6,10 +6,10 @@ import rain.utils.autoKey
 
 open class Color(
     name:String = rain.utils.autoKey(),
-    var h: ValueAct = ValueAct(),
-    var s: ValueAct = ValueAct(),
-    var v: ValueAct = ValueAct(),
-    var a: ValueAct = ValueAct(),
+    var h: Value = Value(),
+    var s: Value = Value(),
+    var v: Value = Value(),
+    var a: Value = Value(),
 ): Act(name) {
 
     fun colorHSVa() = ColorHSVa(

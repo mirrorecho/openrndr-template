@@ -157,11 +157,22 @@ class Score(
             extend {
 
                 // TODO: need to worry about acts ordering?
-                acts.filter { it.value.isRunning }.forEach {
+                acts.forEach {
                     val act = it.value
+                    // TODO: note that updateAnimation has to be called even if animations not running yet...
+                    //  ... due to some quirk with order of operations and triggering... consider refactoring
+                    //  ... alongside trigger launching above
                     act.updateAnimation()
-                    act.render(this@Score, this)
+                    if (act.isRunning) {
+                        act.render(this@Score, this)
+                    }
                 }
+
+//                acts.filter { it.value.isRunning }.forEach {
+//                    val act = it.value
+//                    act.updateAnimation()
+//                    act.render(this@Score, this)
+//                }
 
                 // DO NOTHING?
 

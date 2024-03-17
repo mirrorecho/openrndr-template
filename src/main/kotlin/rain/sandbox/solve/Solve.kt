@@ -5,15 +5,15 @@ import rain.patterns.*
 import rain.rndr.*
 
 fun main()  {
-    solve2()
+    solve3()
 }
 
 // TODO: SOLVE THE FOLLOWING:
 //  - I.
 //  - (1) create a circle in the center of the screen
-//  - (2) animate the circle's radius so that it increases from 0. to 99. over 2 seconds
+//  - (2) animate the circle's radius so that it increases from 0. to 99. over 4 seconds
 //  - (3) add easing to the above radius animation
-//  - (4) animate the circle's coloxr's alpha so that it increases from 0. to 1. over .6 seconds
+//  - (4) animate the circle's color's alpha so that it increases from 0. to 1. over .6 seconds
 //  - (5) continue to animate the circle's color's alpha so that it decreases from 1. to 0. over the next 1.4 seconds
 //  - (6) change the circle's position to a random point, over 2 seconds, with easing for both X/Y coordinates
 //  - ... cleanup and refactor!

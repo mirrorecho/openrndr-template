@@ -1,6 +1,7 @@
 package rain.rndr
 
-import rain.utils.autoKey
+import rain.patterns.*
+import rain.utils.*
 
 // TODO maybe: consider renaming to Event? (wait to see how this is implemented in SuperCollider implementation)
 // TODO: OK To not include type parameter of the Act here????
@@ -18,8 +19,8 @@ class Trigger(
 
     // TODO: maybe remove this... in order to avoid the complexity of cascading triggers/acts?
     //  or, perhaps rethink... part of the issue is that these value acts ARE NOT associated with a machine...
-    fun propertyAsValueAct(propertyName:String, actName:String?=null):ValueAct {
-        return if (actName.isNullOrBlank()) ValueAct(value=propertyAs(propertyName)) else ValueAct(name=actName, value=propertyAs(propertyName))
+    fun propertyAsValueAct(propertyName:String, actName:String?=null):Value {
+        return if (actName.isNullOrBlank()) Value(value=propertyAs(propertyName)) else Value(name=actName, value=propertyAs(propertyName))
     }
 
     // TODO: implement?
@@ -27,6 +28,20 @@ class Trigger(
 //        return rndrMachine.getRelatedAct(relationshipName, actName)
 //    }
 
+    // TODO: could be made more elegant
+    fun animateEvent(name:String): AnimateEvent? {
+        properties[name]?.let {
+            return AnimateEvent(
+                propertyAs(name),
+                propertyAs("$name:animate"),
+                propertyAs("$name:easing"),
+                propertyAs("$name:init"),
+            )
+        }
+        return null
+    }
+
+    // TODO: rename so that it's clear that a trigger is being created here...
     fun <RA:Act>relatedAct(relationshipName: String, actName: String?=null, properties: Map<String, Any?> = mapOf() ): RA {
         val rMachine = rndrMachine.targetsAs<RndrMachine<RA>>(relationshipName)
         val rTrigger = score.createTrigger(
@@ -51,6 +66,8 @@ class Trigger(
 
     val dur: Double by this.properties
 
+    val durMs get() = (dur * 1000.0).toLong()
+
     fun <P>propertyAs(propertyName:String):P {
         return (properties[propertyName] ?: rndrMachine.properties[propertyName]) as P
     }
@@ -63,7 +80,7 @@ class Trigger(
 
     fun trigger() {
         println("Triggering: " + rndrMachine.key + ", act: " + (act?.name ?: ""))
-        act?.trigger(properties)
+        act?.triggerMe(this)
     }
 
 }

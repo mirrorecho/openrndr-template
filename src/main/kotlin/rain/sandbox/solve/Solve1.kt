@@ -9,7 +9,7 @@ fun solve1() {
     createValues(true,"X", "Y", "H", "S", "V", "A", "STROKE_WEIGHT", "RADIUS")
 
     // TODO: this is not being picked up in the trigger properties!
-    RndrMachine<ValueAct>("X").apply {
+    RndrMachine<Value>("X").apply {
         setProperty("value", 0.25)
         save()
     }
@@ -68,7 +68,7 @@ fun solve1() {
 
     val c1 = Cell("C1").apply { createMe() }
     c1.setVeinCycle("machine", "CIRCLE_1")
-    c1.setVeins("dur", 2.0,)
+    c1.vein("dur")(2.0)
 
     val score = Score(rndrMachines)
     score.readPattern(c1)
