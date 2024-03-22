@@ -2,6 +2,7 @@ package rain.patterns
 
 import rain.interfaces.*
 import rain.language.*
+import rain.utils.autoKey
 
 
 open class Tree(
@@ -96,4 +97,24 @@ open class CellTree(
         }
     }
 
+    operator fun invoke(vararg patterns: Pattern): CellTree {
+        this.extend(*patterns)
+        return this
+    }
+
+}
+
+// ===========================================================================================================
+
+fun seq(key:String = autoKey(), properties: Map<String, Any?> = mapOf(), context: ContextInterface = LocalContext): CellTree {
+    return CellTree(key, properties, context).apply {
+        simultaneous = false
+        createMe()
+    }
+}
+fun par(key:String = autoKey(), properties: Map<String, Any?> = mapOf(), context: ContextInterface = LocalContext): CellTree {
+    return CellTree(key, properties, context).apply {
+        simultaneous = true
+        createMe()
+    }
 }

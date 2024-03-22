@@ -96,7 +96,7 @@ open class Relationship(
     relationshipLabel: String = "RELATES_TO"
 ): LanguageRelationship, Item(key, properties, context) {
 
-    // TODO: elvis operator defaulting to empty string is wonky here... should just alwyas have the key
+    // TODO: elvis operator defaulting to empty string is wonky here... should just always have the key
     // and TODO maybe: should these be read upfront when initialized?
     override val source: Node by lazy { Node(source_key ?: "") }
     override val target: Node by lazy { Node(target_key ?: "") }
@@ -105,9 +105,19 @@ open class Relationship(
 
 }
 
+fun relate(sourceKey:String, relationshipLabel:String, targetKey:String,
+           properties: Map<String, Any?> = mapOf(), context:ContextInterface = LocalContext) {
+    Relationship(
+        relationshipLabel=relationshipLabel,
+        source_key = sourceKey, target_key = targetKey, properties = properties, context = context,
+    ).createMe()
+}
 
-
-
+fun relate(sourceKey:String, labelsToKeys:Map<String, String>, context:ContextInterface = LocalContext) {
+    labelsToKeys.forEach { (label, key) ->
+        relate(sourceKey, label, key, context=context)
+    }
+}
 
 
 

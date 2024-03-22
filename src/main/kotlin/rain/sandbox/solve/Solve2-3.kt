@@ -90,7 +90,6 @@ fun solve3() {
 
 // TODO maybe: make animation pattern an object, and a node stored in the graph
 
-
 // TODO: consider storing a "map" of how a cell could animate in the graph (i.e. only dur and easing, but not values)
 //  ... more generally, consider storing Cell streams that could be reused and merged
 class AnimateCell(

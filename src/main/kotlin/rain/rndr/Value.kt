@@ -30,6 +30,7 @@ open class Value(
                     ::value.animate(anim.value, animMs, anim.easingTyped)
                     ::value.complete()
                 } else {
+                    // TODO, a better way to keep current value for the duration instead of "animating" it?
                     ::value.animate(value, trigger.durMs+animMs)
                     ::value.complete()
                     ::value.animate(anim.value, animMs.absoluteValue, anim.easingTyped)

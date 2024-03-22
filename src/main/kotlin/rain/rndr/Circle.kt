@@ -38,9 +38,6 @@ open class Circle(
     override fun triggerMe(trigger: Trigger) {
         super.triggerMe(trigger)
         triggerValue("RADIUS", radius, trigger)
-
-//        val fo = relatedActs["RADIUS"]
-//        fo?.invoke()?.trigger(properties)
     }
 
     override fun render(score: Score, program: Program) {
@@ -78,13 +75,7 @@ fun circleMachine(
         Circle(
             name = tr.actName,
             // TODO: simplify this argument assignment below
-            radius = tr.relatedAct("RADIUS",
-                // TODO: what to do about the below?
-//                properties = mapOf(
-//                    "value" to tr.properties["RADIUS"],
-//                    "animate" to tr.properties["RADIUS:animate"]
-//                ),
-            ),
+            radius = tr.relatedAct("RADIUS"),
             position = tr.relatedAct("POSITION"),
             strokeColor = tr.relatedAct("STROKE_COLOR"),
             strokeWeight = tr.relatedAct("STROKE_WEIGHT", properties = mapOf("value" to 1.0)),

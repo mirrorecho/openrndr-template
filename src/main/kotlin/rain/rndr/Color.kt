@@ -21,6 +21,13 @@ open class Color(
 
     fun colorRGBa(): ColorRGBa = colorHSVa().toRGBa()
 
+    override fun triggerMe(trigger: Trigger) {
+        super.triggerMe(trigger)
+        triggerValue("H", a, trigger)
+        triggerValue("S", a, trigger)
+        triggerValue("V", a, trigger)
+        triggerValue("A", a, trigger)
+    }
 
 }
 

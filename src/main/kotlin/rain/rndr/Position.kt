@@ -10,6 +10,8 @@ open class Position(
     var y: Value = Value(),
 ): Act(name) {
 
+
+
     // TODO: what was the idea of the below method?
 //    fun setTargets(x:MachineFunc?, y:MachineFunc?) {
 //        if (x == null) {
