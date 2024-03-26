@@ -12,13 +12,13 @@ import kotlin.time.DurationUnit
 import kotlin.time.toDuration
 
 class Score(
-    val machinePalette: Palette<RndrMachine<Act, *>>,
+    val machinePalette: Palette<RndrMachine<*>>,
 //    val program: Program
 ) {
 
     // TODO... used now with new trigger model?
     // TODO maybe: should the key be a pair of the machone node key PLUS the act name? (as opposed to just the act name?)
-    private val acts: MutableMap<String, Act> = mutableMapOf()
+    private val acts: MutableMap<String, Act<*>> = mutableMapOf()
 
     private val timeCodes: MutableMap<Double, MutableList<Trigger<*>>> = mutableMapOf()
 
@@ -45,7 +45,7 @@ class Score(
         trigger.act?.let { acts[trigger.actName] = it }
     }
 
-    fun <AT:Act>getAct(name: String): AT? = this.acts[name] as AT?
+    fun <AT:Act<*>>getAct(name: String): AT? = this.acts[name] as AT?
 
     // TODO: test and document ... also, should this be the public method, or should it be something else?
     //  ... could combine with play, and make this private

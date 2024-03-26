@@ -77,6 +77,7 @@ open class Node(
             return it
         }
         context.make<T>(makeTargetLabel, makeTargetKey ?: autoKey()).let {
+            it.mergeMe()
             this.relate(relationshipLabel, it)
             return it
         }

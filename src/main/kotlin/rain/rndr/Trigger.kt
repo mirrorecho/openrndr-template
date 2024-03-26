@@ -5,9 +5,9 @@ import rain.utils.*
 
 // TODO maybe: consider renaming to Event? (wait to see how this is implemented in SuperCollider implementation)
 // TODO: OK To not include type parameter of the Act here????
-class Trigger<AT:Act>(
+class Trigger<MT:RndrMachine<*>>(
     val score: Score,
-    val rndrMachine: RndrMachine<AT, *>,
+    val rndrMachine: MT,
     val runningTime:Double = 0.0, // TODO: used?
     val properties: Map<String, Any?> = mapOf()
     // TODO... the trigger is what will need to connect an Act to its related/sub acts...
@@ -15,7 +15,7 @@ class Trigger<AT:Act>(
 ) {
 
     val actName: String = if (rndrMachine.single) { rndrMachine.key } else { properties["act"] as String? ?: autoKey()  }
-    val act:AT = score.getAct(actName) ?: rndrMachine.makeAct(this)
+    val act:Act<MT> = score.getAct(actName) ?: rndrMachine.makeAct(this)
 
 //    // TODO: maybe remove this... in order to avoid the complexity of cascading triggers/acts?
 //    //  or, perhaps rethink... part of the issue is that these value acts ARE NOT associated with a machine...
@@ -28,27 +28,27 @@ class Trigger<AT:Act>(
 //        return rndrMachine.getRelatedAct(relationshipName, actName)
 //    }
 
-    // TODO: combine this up into the Trigger itself (the Trigger IS THE EVENT!)
-    fun animateEvent(name:String): AnimateEvent? {
-        properties[name]?.let {
-            return AnimateEvent(
-                propertyAs(name),
-                propertyAs("$name:animate"),
-                propertyAs("$name:easing"),
-                propertyAs("$name:init"),
-            )
-        }
-        return null
-    }
+//    // TODO: combine this up into the Trigger itself (the Trigger IS THE EVENT!)
+//    fun animateEvent(name:String): AnimateEvent? {
+//        properties[name]?.let {
+//            return AnimateEvent(
+//                propertyAs(name),
+//                propertyAs("$name:animate"),
+//                propertyAs("$name:easing"),
+//                propertyAs("$name:init"),
+//            )
+//        }
+//        return null
+//    }
 
-    // TODO: rename so that it's clear that a trigger is being created here...
-    fun <RA:Act>relatedAct(relationshipName: String, actName: String?=null, properties: Map<String, Any?> = mapOf() ): RA? {
-        // TODO: pass-through act names
-        rndrMachine.targetsAs<RndrMachine<RA, *>?>(relationshipName)?.let {
-            return it.createTrigger(score, this.runningTime, properties).act
-        }
-        return null
-    }
+    // TODO: used?
+//    fun <RA:Act>relatedAct(relationshipName: String, actName: String?=null, properties: Map<String, Any?> = mapOf() ): RA? {
+//        // TODO: pass-through act names
+//        rndrMachine.targetsAs<RndrMachine<RA, *>?>(relationshipName)?.let {
+//            return it.createTrigger(score, this.runningTime, properties).act
+//        }
+//        return null
+//    }
 
     val dur: Double by this.properties
 

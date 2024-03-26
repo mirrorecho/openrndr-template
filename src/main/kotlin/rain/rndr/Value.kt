@@ -7,24 +7,21 @@ import rain.patterns.CellBuilder
 import rain.utils.autoKey
 import kotlin.math.absoluteValue
 
-open class ValueMachine(
+open class Value(
     key:String = autoKey(),
     properties: Map<String, Any?> = mapOf(),
     context: ContextInterface = LocalContext,
-    ):RndrMachine<Value, CellBuilder>(key, properties, context) {
-    override val label = LocalContext.getLabel("RndrMachine", "Machine", "Leaf") { k, p, c -> ValueMachine(k, p, c) }
+    ):RndrMachine<CellBuilder>(key, properties, context) {
 
-    override fun makeAct(tr: Trigger<Value>): Value {
-        return Value(tr)
-    }
+    override val label = LocalContext.getLabel("RndrMachine", "Machine", "Leaf") { k, p, c -> Value(k, p, c) }
 
-    fun yoMama() {}
+    var value: Double = 0.0
 
 }
 
-open class Value(
+open class ValueAct(
     trigger:Trigger<*>,
-    var value: Double = 0.0,
+
 ): Act(trigger) {
 
     // TODO maybe: combine with animate() method below?

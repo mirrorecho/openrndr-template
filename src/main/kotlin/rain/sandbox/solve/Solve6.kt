@@ -7,6 +7,8 @@ import rain.language.*
 import rain.rndr.*
 
 fun solve6() {
+
+
     createValues(true,"X", "Y", "H", "S", "V", "A", "STROKE_WEIGHT", "RADIUS",
         "X_MIN", "X_MAX", "Y_MIN", "Y_MAX"
         )

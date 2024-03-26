@@ -16,9 +16,9 @@ import rain.patterns.CellBuilder
 // TODO maybe: consider whether a trigger would ever be reused...
 //  that could be an interesting idea with creative possibilities...
 
-// TODO: maybe Act is only an interface? (and that way, not all Acts have to be Animatable
-abstract class Act(
-    val trigger: Trigger<*>, // TODO maybe - store the trigger val here?
+// TODO: make an Act interface? (and that way, not all Acts have to be Animatable)
+class Act<MT:RndrMachine<*>>(
+    val trigger: Trigger<MT>, // TODO maybe - store the trigger val here?
     val name: String = trigger.actName,
 
     // the key is the relationship name, the value is the Act object to use for that related machine
@@ -26,15 +26,17 @@ abstract class Act(
     // ... TODO: implement logic to create this in score creation ... expect this to get NASTY!
 //    val relatedMachinesToActs: MutableMap<String, Act> = mutableMapOf()
 
-): Animatable() {
+): Animatable() { // TODO: do all acts need to be animatable, or only Value Acts?
 
-    abstract val machine: RndrMachine<*, *>
+//    abstract val machine: RndrMachine<*, *>
 
     var dur: Double = 0.0 // TODO: used? if so, how is this controlled?
     var isRunning: Boolean = false // TODO: used?
 
-    fun <MT:RndrMachine<*,*>>parentMachine(): MT {
-        return trigger.rndrMachine as MT
+    val targetActs: MutableMap<String, Act<*>> = mutableMapOf()
+
+    fun parentMachine(): MT {
+        return trigger.rndrMachine
     }
 
     open class Builder(cell: Cell): CellBuilder(cell) {
@@ -48,10 +50,10 @@ abstract class Act(
 //        println("IS RUNNING ---")
     } // called if re-triggering existing act
 
-    // TODO maybe: replace with something like "triggerChild" so that implementation is not restricted to Values?
-    fun triggerValue(valueName: String, valueAct:Value, trigger: Trigger<*>) {
-        trigger.properties[valueName]?.let { valueAct.triggerMe( trigger ) }
-    }
+    // TODO still needed?
+//    fun triggerValue(valueName: String, valueAct:Value, trigger: Trigger<*>) {
+//        trigger.properties[valueName]?.let { valueAct.triggerMe( trigger ) }
+//    }
 
 
 //    fun <T>createActProperty(name: String, relationshipLabel: String? = null): ActProperty<T> {
