@@ -14,51 +14,60 @@ import rain.patterns.*
 
 
 // TODO: reconfigure so Act type param not needed at class level, only at fun level
-open class RndrMachine<T:Act>(
+abstract class RndrMachine<AT:Act, CBT:CellBuilder>(
     key:String = autoKey(),
     properties: Map<String, Any?> = mapOf(),
     context: ContextInterface = LocalContext,
 ): Machine, Leaf(key, properties, context) { // TODO: is Leaf the best parent class? (Relationships might not be simple tree patterns.)
 
-    override val label = LocalContext.getLabel("RndrMachine", "Machine", "Leaf") { k, p, c -> RndrMachine<T>(k, p, c) }
+    abstract fun makeAct(tr:Trigger<AT>): AT
 
-    val actFactory: ((tr:Trigger)->T)? get() = getProperty("ACT_FACTORY")
+    fun <RMT:RndrMachine<RAT,*>, RAT:Act>relatedMachine(relation:String) = RelatedMachine<RMT, RAT>(this, relation)
+
+    fun cell(
+        key:String = autoKey(),
+        act:String? = this.key,
+        properties: Map<String, Any?> = mapOf(),
+        context: ContextInterface = LocalContext,
+        callback: CBT.()->Unit
+    ): Cell {
+        Cell(key, properties, context).apply {
+            setVeinCycle("machine", )
+            act?.let { setVeinCycle("act", it) }
+            build(callback)
+            createMe()
+            return this
+        }
+    }
 
     var single: Boolean by this.properties
 
-    fun setFactory(factory: (tr:Trigger)->T) {
-        this.setProperty("ACT_FACTORY", factory, true )
-    }
-
-    // TODO: implement these?
-//    fun <RT:Act>getRelatedAct(relationshipName: String, actName: String?=null): RT? {
-//        return this.targetsAs<RndrMachine<RT>>(relationshipName).getAct(actName)
-//    }
-//    fun getAct(actName: String?=null): T? {
-//
-//    }
-
-    // TODO: NOTE - no override since takes a Trigger as arg... awkward?
-//    fun trigger(runningTime:Double, properties: Map<String, Any?>) {
-//        val act: T = this.actFactory(this)
-//    }
-
-}
-
-fun <T:Act>createRndrMachine(key:String= autoKey(),  single:Boolean=true, factory: (tr:Trigger)->T): RndrMachine<T> {
-    return RndrMachine<T>(key).apply {
-        this.single = single
-        setFactory(factory)
-        createMe() // TODO: should the create come before or after setFactory?
-    }
-}
-
-fun createValues(single:Boolean=true, vararg keys: String) {
-    keys.forEach { k ->
-        createRndrMachine(k, single) {
-            Value(
-                name = it.actName,
-                value=it.propertyAs("value")  ?: 0.0 )
+    fun createTrigger(score: Score, time:Double, properties: Map<String, Any?>): Trigger<AT> {
+        return Trigger(score, this, time, this.properties + properties).apply {
+            score.addTrigger(this, time)
         }
     }
+
 }
+
+
+class RelatedMachine<RMT:RndrMachine<RAT,*>, RAT:Act>(
+    val source: RndrMachine<*,*>,
+    val relation: String,
+    var targetKey: String? = null
+) {
+    fun getMachine():RMT = source.targetsOrMakeAs(relation, source.primaryLabel, targetKey)
+
+    fun getRelatedAct(tr:Trigger<*>):RAT {
+        return getMachine().createTrigger(tr.score, tr.runningTime, tr.properties).act
+    }
+}
+
+//fun <T:Act>createRndrMachine(key:String= autoKey(),  single:Boolean=true, factory: (tr:Trigger<T>)->T): RndrMachine<T> {
+//    return RndrMachine<T>(key).apply {
+//        this.single = single
+//        setFactory(factory)
+//        createMe() // TODO: should the create come before or after setFactory?
+//    }
+//}
+

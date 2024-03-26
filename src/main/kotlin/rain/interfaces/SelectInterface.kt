@@ -44,6 +44,8 @@ interface SelectInterface {
 
     val first: LanguageItem? get() = this.asSequence().firstOrNull()
 
+    fun <T:LanguageItem>firstAs(): T? = this.asTypedSequence<T>().firstOrNull()
+
     // TODO: implement a firstAs?
 
     fun get(key: String) {throw NotImplementedError()}

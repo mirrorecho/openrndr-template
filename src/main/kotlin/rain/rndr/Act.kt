@@ -4,6 +4,8 @@ import rain.utils.*
 import org.openrndr.Program
 import org.openrndr.animatable.Animatable
 import org.openrndr.animatable.easing.Easing
+import rain.patterns.Cell
+import rain.patterns.CellBuilder
 
 
 // DECISION 1: these are NOT nodes in the graph (should be arbitrarily able to spin up 1,000s of actions
@@ -16,34 +18,38 @@ import org.openrndr.animatable.easing.Easing
 
 // TODO: maybe Act is only an interface? (and that way, not all Acts have to be Animatable
 abstract class Act(
-
-    val name: String = autoKey(),
-
-    // TODO: any of these needed?
-//    val rndrMachine: RndrMachine<*>,
-//    val properties: MutableMap<String, Any?> = mutableMapOf(),
-//    val score: Score,
-//    val program: Program = score.program
-//    context: ContextInterface = LocalContext,
-
+    val trigger: Trigger<*>, // TODO maybe - store the trigger val here?
+    val name: String = trigger.actName,
 
     // the key is the relationship name, the value is the Act object to use for that related machine
     // this is mutable for the same reason as properties above
     // ... TODO: implement logic to create this in score creation ... expect this to get NASTY!
-    val relatedMachinesToActs: MutableMap<String, Act> = mutableMapOf()
+//    val relatedMachinesToActs: MutableMap<String, Act> = mutableMapOf()
 
 ): Animatable() {
-    // val machine: String by this.properties // redundant since the MachineFunc object will need to be specified at the time of instantiation
 
-    var dur: Double = 0.0 // TODO: how is this contolled?
+    abstract val machine: RndrMachine<*, *>
+
+    var dur: Double = 0.0 // TODO: used? if so, how is this controlled?
     var isRunning: Boolean = false // TODO: used?
 
-    open fun triggerMe(trigger: Trigger) {
+    fun <MT:RndrMachine<*,*>>parentMachine(): MT {
+        return trigger.rndrMachine as MT
+    }
+
+    open class Builder(cell: Cell): CellBuilder(cell) {
+        fun dur() {
+
+        }
+    }
+
+    open fun triggerMe(trigger: Trigger<*>) {
         isRunning = true
+//        println("IS RUNNING ---")
     } // called if re-triggering existing act
 
     // TODO maybe: replace with something like "triggerChild" so that implementation is not restricted to Values?
-    fun triggerValue(valueName: String, valueAct:Value, trigger: Trigger) {
+    fun triggerValue(valueName: String, valueAct:Value, trigger: Trigger<*>) {
         trigger.properties[valueName]?.let { valueAct.triggerMe( trigger ) }
     }
 

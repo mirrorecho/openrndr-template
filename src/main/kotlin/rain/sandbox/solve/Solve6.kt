@@ -6,7 +6,6 @@ import rain.patterns.*
 import rain.language.*
 import rain.rndr.*
 
-
 fun solve6() {
     createValues(true,"X", "Y", "H", "S", "V", "A", "STROKE_WEIGHT", "RADIUS",
         "X_MIN", "X_MAX", "Y_MIN", "Y_MAX"
@@ -31,13 +30,21 @@ fun solve6() {
 
     val color1 = colorMachine("COLOR_1", true, "H", "S", "V", "A")
 
-    val circle = circleMachine("CIRCLE_1", true,
-        "RADIUS",
-        "POSITION_1",
-        "COLOR_1",
-        "STROKE_WEIGHT",
-        "COLOR_1"
-    )
+    val circle = CircleMachine("CIRCLE_1").apply {
+        radius.targetKey = "SHARED_RADIUS"
+        createMe()
+    }
+    circle.cell {
+        animate()
+    }
+
+//    val circle = circleMachine("CIRCLE_1", true
+//        "RADIUS",
+//        "POSITION_1",
+//        "COLOR_1",
+//        "STROKE_WEIGHT",
+//        "COLOR_1"
+//    )
 
     println("----------------------------------------------------------------------------")
 
@@ -48,7 +55,6 @@ fun solve6() {
 
     val c1 = cell("C1", "CIRCLE_1") { // if no act specified, then actName=machineName
         vein("dur")(0.4, 0.6, 2.0, 1.0 )
-//        vein("radius")(400.0, 600.0, 90.0, 200.0, 20.0).ani(null, "CubicInOut")
         vein("RADIUS")(
             ani(20.0, initValue = 0.0, easing = "CubicIn"), // start at 120.0 and animate to 20.0 over the length of dur (1.0)
             ani(9.0, easing="CubicOut"),
@@ -56,15 +62,43 @@ fun solve6() {
             ani(99.0)
         )
     }
+
+    val c1a = cell<Circle.Builder>("C1", "CIRCLE_1") { // if no act specified, then actName=machineName
+        dur(0.4, 0.6, 2.0, 1.0 )
+        radius {
+            value(20.0, 9.0, 120.0, 99.0)
+            randMin()
+            randMax()
+            animate(0.0, 0.0, 0.0, null)
+            animateInit()
+            vein("init")(0.0, null, null, null)
+            vein("easing")("CubicIn", "CubicOut", "CubicOut", null)
+        }
+        channel("POSITION") {
+            vein("animate")(0.0, 0.0, 0.0, null)
+            vein("easing")("CubicIn", "CubicOut", "CubicOut", null)
+            channel("X") {
+                vein("value")(20.0, 9.0, 120.0, 99.0)
+                vein("init")(0.0, null, null, null)
+            }
+            channel("Y") {
+                vein("value")(20.0, 9.0, 120.0, 99.0)
+                vein("init")(0.0, null, null, null)
+            }
+        }
+    }
+
     val p1 = cell("P1", "POSITION_1") { // if no act specified, then actName=machineName
         vein("dur")(2.4, 1.6 )
 //        vein("radius")(400.0, 600.0, 90.0, 200.0, 20.0).ani(null, "CubicInOut")
-        machine(rel="X")
-        vein("X")(
+        vein(machine="X", value="X")(
             ani(rand(0.0, 0.0), initValue = 0.5, easing = "CubicIn"), // start at 120.0 and animate to 20.0 over the length of dur (1.0)
             ani(rand(0.0, 1.0), easing="CubicOut"),
             ani(99.0)
         )
+        cell(rel="X") {
+            vein()()
+        }
     }
 
     val a1 = cell("ALPHA_1", "COLOR_1") {

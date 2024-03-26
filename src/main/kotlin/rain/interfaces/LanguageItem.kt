@@ -2,6 +2,7 @@ package rain.interfaces
 
 import rain.language.Item
 import rain.language.TargetedRelationshipSelect
+import rain.utils.autoKey
 
 interface LanguageItem: GraphableItem {
 
@@ -54,7 +55,9 @@ interface LanguageNode: LanguageItem, GraphableNode {
     fun r(direction: SelectDirection, label:String?=null, keys:List<String>?=null, properties:Map<String,Any>?=null): SelectInterface
 
     // TODO: is this even necessary in this interface? Or just include in the Node class?
-    fun <T:LanguageNode?>targetsAs(label:String?=null, keys:List<String>?=null, properties:Map<String,Any>?=null): T
+    fun <T:LanguageNode?>targetsAs(label:String?=null, keys:List<String>?=null, properties:Map<String,Any>?=null): T?
+
+    fun <T:LanguageNode>targetsOrMakeAs(relationshipLabel:String, makeTargetLabel:String, makeTargetKey:String?=null, keys:List<String>?=null, properties:Map<String,Any>?=null): T
 }
 
 // ===========================================================================================================

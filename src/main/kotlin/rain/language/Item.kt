@@ -68,8 +68,20 @@ open class Node(
     override fun r(direction: SelectDirection, label:String?, keys:List<String>?, properties:Map<String,Any>?): TargetedRelationshipSelect =
         selectSelf.r(direction=direction, label=label, keys=keys, properties=properties)
 
-    override fun <T:LanguageNode?>targetsAs(label:String?, keys:List<String>?, properties:Map<String,Any>?): T =
-        r(direction= SelectDirection.RIGHT, label=label, keys=keys, properties=properties).n().first as T
+    // TODO: should this be T?
+    override fun <T:LanguageNode?>targetsAs(label:String?, keys:List<String>?, properties:Map<String,Any>?): T? =
+        r(direction= SelectDirection.RIGHT, label=label, keys=keys, properties=properties).n().firstAs()
+
+    override fun <T:LanguageNode>targetsOrMakeAs(relationshipLabel:String, makeTargetLabel:String, makeTargetKey:String?, keys:List<String>?, properties:Map<String,Any>?): T {
+        r(direction= SelectDirection.RIGHT, label=relationshipLabel, keys=keys, properties=properties).n().firstAs<T>() ?.let{
+            return it
+        }
+        context.make<T>(makeTargetLabel, makeTargetKey ?: autoKey()).let {
+            this.relate(relationshipLabel, it)
+            return it
+        }
+    }
+
 
     fun relate(relationshipLabel: String, targetKey:String, properties: Map<String, Any?> = mapOf()) {
         Relationship(
@@ -78,7 +90,7 @@ open class Node(
         ).createMe()
     }
 
-    fun relate(relationshipLabel: String, targetNode:Node, properties: Map<String, Any?> = mapOf()) {
+    fun relate(relationshipLabel: String, targetNode:LanguageNode, properties: Map<String, Any?> = mapOf()) {
         // TODO: implement relate
         relate(relationshipLabel, targetNode.key, properties)
     }

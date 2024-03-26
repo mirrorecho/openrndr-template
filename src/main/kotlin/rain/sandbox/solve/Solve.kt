@@ -5,7 +5,7 @@ import rain.patterns.*
 import rain.rndr.*
 
 fun main()  {
-    solve6()
+    solve5()
 }
 
 // TODO: SOLVE THE FOLLOWING:

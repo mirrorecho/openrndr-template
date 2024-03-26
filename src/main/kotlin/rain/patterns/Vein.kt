@@ -1,29 +1,36 @@
 package rain.patterns
 
 import org.openrndr.animatable.easing.Easing
+import rain.utils.cycleOf
 
-class Vein(val cell: Cell, val name:String) {
+class Vein(
+    val cell: Cell,
+    val name:String,
+    var isCycle:Boolean = false,
+    ) {
+
+
 
     // TODO: this assumes all veins contain Double values... need to accomodate other types
     operator fun invoke(vararg values: Any?):Vein {
         cell.traverseNames.add(name)
-        if (values.filterIsInstance<AnimateEvent>().isNotEmpty()) {
-            val animateList: List<AnimateEvent> = values.map {
-                if (it is AnimateEvent) it else AnimateEvent(it as Double, null)
-            }
-            cell.properties[name] = sequence { animateList.forEach { yield(it.value) } }
-            cell.properties["$name:animate"] = sequence { animateList.forEach { yield(it.dur) } }
-            cell.properties["$name:easing"] = sequence { animateList.forEach { yield(it.easing) } }
-            cell.properties["$name:init"] = sequence { animateList.forEach { yield(it.initValue) } }
-//            println("===============================")
-//            println(cell.properties)
-//            println(animSeq.toList())
-            cell.traverseNames.add("$name:animate")
-            cell.traverseNames.add("$name:easing")
-            cell.traverseNames.add("$name:init")
-        } else {
-            cell.properties[name] = sequenceOf(*values)
-        }
+//        if (values.filterIsInstance<AnimateEvent>().isNotEmpty()) {
+//            val animateList: List<AnimateEvent> = values.map {
+//                if (it is AnimateEvent) it else AnimateEvent(it as Double, null)
+//            }
+//            cell.properties[name] = sequence { animateList.forEach { yield(it.value) } }
+//            cell.properties["$name:animate"] = sequence { animateList.forEach { yield(it.dur) } }
+//            cell.properties["$name:easing"] = sequence { animateList.forEach { yield(it.easing) } }
+//            cell.properties["$name:init"] = sequence { animateList.forEach { yield(it.initValue) } }
+////            println("===============================")
+////            println(cell.properties)
+////            println(animSeq.toList())
+//            cell.traverseNames.add("$name:animate")
+//            cell.traverseNames.add("$name:easing")
+//            cell.traverseNames.add("$name:init")
+//        } else {
+        cell.properties[name] = if (isCycle) cycleOf(*values) else sequenceOf(*values)
+//        }
         return this
     }
 
@@ -41,7 +48,7 @@ class Vein(val cell: Cell, val name:String) {
 
 }
 
-// TODO maybe: reconsider the name? (may use Event in other context(s) )
+// TODO merge up into the Trigger
 class AnimateEvent(
     val value:Double, // value to animate to
     val dur:Double? = 0.0, // animation duration, if null then no animation, if 0.0 then the full event dur, if - then animate the end of the event

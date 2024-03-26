@@ -2,63 +2,78 @@ package rain.rndr
 
 
 import org.openrndr.Program
-import rain.utils.autoKey
+import rain.utils.*
+import rain.interfaces.*
+import rain.language.*
+import  rain.machines.*
+import rain.patterns.*
 
+
+]
+open class CircleMachine(
+    key:String = autoKey(),
+    properties: Map<String, Any?> = mapOf(),
+    context: ContextInterface = LocalContext,
+    ):RndrMachine<Circle, CircleCellBuilder>(key, properties, context) {
+
+    override val label = LocalContext.getLabel("CircleMachine", "Machine", "Leaf") { k, p, c -> CircleMachine(k, p, c) }
+
+    val radius = relatedMachine<ValueMachine, Value>("RADIUS")
+    val strokeColor = relatedMachine<ValueMachine, Value>("STROKE_COLOR")
+
+    override fun makeAct(tr: Trigger<Circle>): Circle {
+        return Circle(tr, this)
+    }
+
+    fun render(score: Score, program: Program) {
+//        println("circle with x position " + position.x.value.toString())
+        program.apply {
+            drawer.fill = fillColor?.colorRGBa()
+            drawer.stroke = strokeColor?.colorRGBa()
+            strokeWeight?.apply { drawer.strokeWeight = value }
+            drawer.circle(
+                position.vector(program),
+                radius.value,
+            )
+        }
+    }
+}
+
+    }
 
 open class Circle(
-    name:String = rain.utils.autoKey(),
+    trigger:Trigger<Circle>,
+    override val machine: CircleMachine,
+    val radius: Value = machine.radius.relatedAct(trigger),
+    ): Act(trigger) {
 
-    var radius: Value = Value(),
-    var position: Position = Position(),
-    var strokeColor: Color = Color(),
-    var strokeWeight: Value = Value(),
-    var fillColor: Color? = null,
-
-    ): Act(name) {
+//    val position: Position = trigger.relatedAct("POSITION", positionName)!!
+//    val strokeColor: Color? = trigger.relatedAct("STROKE_COLOR", strokeColorName)
+//    val strokeWeight: Value? = trigger.relatedAct("STROKE_WEIGHT", strokeWeightName)
+//    val fillColor: Color? = trigger.relatedAct("FILL_COLOR", fillColorName)
 
     // TODO MAYBE: a base drawing class with standard attributes like color, position, etc.
-
-    // TODO... how can this factory work given the val parameters above??!!
-//    override val label = LocalContext.getLabel("Circle", "RndrMachine", "MachineFunc", "Machine", "Leaf") { k, p, c -> Circle(k, p, c) }
-
-
-    // TODO: would be slick to implement something like below to avoid boilerplate
-//    val relatedActs = mapOf(
-//        "RADIUS" to ::radius,
-//        "POSITION" to ::position,
-//    )
-
-    // TODO: accommodate local storage...
-    //  ... point to objects that could EITHER represent
-    //  - machine nodes
-    //  - OR simple values (from this node's properties)
-    //  - OR collections of values (from this node's properties)
-    // TODO: or maybe by lazy is not ideal here? think about it...
-
-    override fun triggerMe(trigger: Trigger) {
-        super.triggerMe(trigger)
-        triggerValue("RADIUS", radius, trigger)
-    }
 
     override fun render(score: Score, program: Program) {
 //        println("circle with x position " + position.x.value.toString())
         program.apply {
             drawer.fill = fillColor?.colorRGBa()
             drawer.stroke = strokeColor?.colorRGBa()
+            strokeWeight?.apply { drawer.strokeWeight = value }
             drawer.circle(
                 position.vector(program),
                 radius.value,
             )
-//            drawer.stroke = strokeColor.colorRGBa()
-//            drawer.strokeWeight = strokeWeight.value
-//            drawer.fill = fillColor?.colorRGBa()
-//            drawer.circle(
-//                position.vector(),
-//                radius.value
-//            )
         }
     }
 }
+
+class CircleCellBuilder(cell:Cell):CellBuilder(cell) {
+    fun radius() {
+
+    }
+}
+
 
 fun circleMachine(
     key:String= autoKey(),
@@ -71,16 +86,7 @@ fun circleMachine(
     fillColorKey: String = "FILL_COLOR",
 ): RndrMachine<Circle> {
 
-    return createRndrMachine(key, single) { tr ->
-        Circle(
-            name = tr.actName,
-            // TODO: simplify this argument assignment below
-            radius = tr.relatedAct("RADIUS"),
-            position = tr.relatedAct("POSITION"),
-            strokeColor = tr.relatedAct("STROKE_COLOR"),
-            strokeWeight = tr.relatedAct("STROKE_WEIGHT", properties = mapOf("value" to 1.0)),
-            fillColor = tr.relatedAct("FILL_COLOR"),
-        )
+    return createRndrMachine(key, single) { tr -> Circle(tr)
     }.apply {
         relate("RADIUS", radiusKey)
         relate("POSITION", positionKey)

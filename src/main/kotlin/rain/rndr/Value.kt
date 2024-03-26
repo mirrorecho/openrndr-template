@@ -1,26 +1,45 @@
 package rain.rndr
 
 import org.openrndr.animatable.easing.Easing
+import rain.interfaces.ContextInterface
+import rain.language.LocalContext
+import rain.patterns.CellBuilder
 import rain.utils.autoKey
 import kotlin.math.absoluteValue
 
+open class ValueMachine(
+    key:String = autoKey(),
+    properties: Map<String, Any?> = mapOf(),
+    context: ContextInterface = LocalContext,
+    ):RndrMachine<Value, CellBuilder>(key, properties, context) {
+    override val label = LocalContext.getLabel("RndrMachine", "Machine", "Leaf") { k, p, c -> ValueMachine(k, p, c) }
+
+    override fun makeAct(tr: Trigger<Value>): Value {
+        return Value(tr)
+    }
+
+    fun yoMama() {}
+
+}
+
 open class Value(
-    name: String = autoKey(),
+    trigger:Trigger<*>,
     var value: Double = 0.0,
-): Act(name) {
+): Act(trigger) {
 
     // TODO maybe: combine with animate() method below?
-    override fun triggerMe(trigger: Trigger) {
+    override fun triggerMe(trigger: Trigger<*>) {
         super.triggerMe(trigger)
 
         // TODO: confirm, is this the right "name" here?
+        //  ALSO: this impletation will get confusing with different kindes of relationships, acts, etc.
         trigger.animateEvent(name)?.let {anim ->
-            println("ANIM ---------------------- ")
-            println("value: ${anim.value}")
-            println("dur: ${anim.dur}")
-            println("easing: ${anim.easing}")
-            println("initValue: ${anim.initValue}")
             if (anim.isAnimation) {
+                println("ANIM $name: ---------------------- ")
+                println("value: ${anim.value}")
+                println("dur: ${anim.dur}")
+                println("easing: ${anim.easing}")
+                println("initValue: ${anim.initValue}")
                 anim.initValue?.let { value = it }
 
                 // TODO: document this logic ...
@@ -39,6 +58,7 @@ open class Value(
 
             } else {
                 value = anim.value
+                println("STATIC VALUE $name: $value")
             }
         }
 
@@ -46,3 +66,10 @@ open class Value(
     }
 
 }
+
+
+//fun createValues(single:Boolean=true, vararg keys: String) {
+//    keys.forEach { k ->
+//        createRndrMachine(k, single) { Value(it) }
+//    }
+//}

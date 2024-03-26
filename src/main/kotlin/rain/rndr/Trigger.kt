@@ -5,9 +5,9 @@ import rain.utils.*
 
 // TODO maybe: consider renaming to Event? (wait to see how this is implemented in SuperCollider implementation)
 // TODO: OK To not include type parameter of the Act here????
-class Trigger(
+class Trigger<AT:Act>(
     val score: Score,
-    val rndrMachine: RndrMachine<*>, // TODO: <*> OK here?
+    val rndrMachine: RndrMachine<AT, *>,
     val runningTime:Double = 0.0, // TODO: used?
     val properties: Map<String, Any?> = mapOf()
     // TODO... the trigger is what will need to connect an Act to its related/sub acts...
@@ -15,20 +15,20 @@ class Trigger(
 ) {
 
     val actName: String = if (rndrMachine.single) { rndrMachine.key } else { properties["act"] as String? ?: autoKey()  }
-    var act:Act? = null
+    val act:AT = score.getAct(actName) ?: rndrMachine.makeAct(this)
 
-    // TODO: maybe remove this... in order to avoid the complexity of cascading triggers/acts?
-    //  or, perhaps rethink... part of the issue is that these value acts ARE NOT associated with a machine...
-    fun propertyAsValueAct(propertyName:String, actName:String?=null):Value {
-        return if (actName.isNullOrBlank()) Value(value=propertyAs(propertyName)) else Value(name=actName, value=propertyAs(propertyName))
-    }
+//    // TODO: maybe remove this... in order to avoid the complexity of cascading triggers/acts?
+//    //  or, perhaps rethink... part of the issue is that these value acts ARE NOT associated with a machine...
+//    fun propertyAsValueAct(propertyName:String, actName:String?=null):Value {
+//        return if (actName.isNullOrBlank()) Value(value=propertyAs(propertyName)) else Value(name=actName, value=propertyAs(propertyName))
+//    }
 
     // TODO: implement?
 //    fun <RA:Act>relatedAct(relationshipName: String, actName: String?=null): RA {
 //        return rndrMachine.getRelatedAct(relationshipName, actName)
 //    }
 
-    // TODO: could be made more elegant
+    // TODO: combine this up into the Trigger itself (the Trigger IS THE EVENT!)
     fun animateEvent(name:String): AnimateEvent? {
         properties[name]?.let {
             return AnimateEvent(
@@ -42,26 +42,12 @@ class Trigger(
     }
 
     // TODO: rename so that it's clear that a trigger is being created here...
-    fun <RA:Act>relatedAct(relationshipName: String, actName: String?=null, properties: Map<String, Any?> = mapOf() ): RA {
-        val rMachine = rndrMachine.targetsAs<RndrMachine<RA>>(relationshipName)
-        val rTrigger = score.createTrigger(
-            this.runningTime,
-            properties,
-            rMachine
-        )
-
-//        val rTrigger = Trigger(
-//            this.score,
-//            rMachine,
-//            null,
-//            this.runningTime,
-//            properties
-//        )
-//        val act = rMachine.actFactory!!.invoke(rTrigger) // TODO maybe: !! OK here?
-//        score.addAct(act)
-
-        //TODO:  type cast OK here??
-        return rTrigger.act as RA
+    fun <RA:Act>relatedAct(relationshipName: String, actName: String?=null, properties: Map<String, Any?> = mapOf() ): RA? {
+        // TODO: pass-through act names
+        rndrMachine.targetsAs<RndrMachine<RA, *>?>(relationshipName)?.let {
+            return it.createTrigger(score, this.runningTime, properties).act
+        }
+        return null
     }
 
     val dur: Double by this.properties
@@ -72,14 +58,14 @@ class Trigger(
         return (properties[propertyName] ?: rndrMachine.properties[propertyName]) as P
     }
 
-    fun setAct() {
-        act = score.getAct(actName) ?: rndrMachine.actFactory?.invoke(this)
-        act?.let { score.addAct(it) }
-        // if (rndrMachine.actFactory == null) println("NO ACT FACTORY FOR " + rndrMachine.key)
-    }
+//    fun setAct() {
+//        act = score.getAct(actName) ?: rndrMachine.actFactory?.invoke(this)
+//        act?.let { score.addAct(it) }
+//        // if (rndrMachine.actFactory == null) println("NO ACT FACTORY FOR " + rndrMachine.key)
+//    }
 
     fun trigger() {
-        println("Triggering: " + rndrMachine.key + ", act: " + (act?.name ?: ""))
+        println("Triggering: ${rndrMachine.key}, act:${act?.name}, properties:${properties}")
         act?.triggerMe(this)
     }
 

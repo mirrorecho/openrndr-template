@@ -12,7 +12,7 @@ import kotlin.time.DurationUnit
 import kotlin.time.toDuration
 
 class Score(
-    val machinePalette: Palette<RndrMachine<Act>>,
+    val machinePalette: Palette<RndrMachine<Act, *>>,
 //    val program: Program
 ) {
 
@@ -20,7 +20,7 @@ class Score(
     // TODO maybe: should the key be a pair of the machone node key PLUS the act name? (as opposed to just the act name?)
     private val acts: MutableMap<String, Act> = mutableMapOf()
 
-    private val timeCodes: MutableMap<Double, MutableList<Trigger>> = mutableMapOf()
+    private val timeCodes: MutableMap<Double, MutableList<Trigger<*>>> = mutableMapOf()
 
 //    fun getAct(machineKey: String, actName: String? = null) {
 //
@@ -39,27 +39,13 @@ class Score(
 //        return act
 //    }
 
-    fun createTrigger(
-        time:Double,
-        properties: Map<String, Any?>,
-        machine: RndrMachine<*> = machinePalette[properties["machine"] as String] as RndrMachine<Act>
-    ): Trigger {
+    fun addTrigger(trigger: Trigger<*>, time:Double) {
         val triggerList = timeCodes.getOrPut(time) {mutableListOf()}
-
-        //TODO: accommodate triggering existing act (updating it)
-        val trigger = Trigger(this, machine, time, properties)
-
-        trigger.setAct()
-
         triggerList.add(trigger)
-        return trigger
+        trigger.act?.let { acts[trigger.actName] = it }
     }
 
-    fun addAct(act: Act) {
-        this.acts[act.name] = act
-    }
-
-    fun getAct(name: String): Act? = this.acts[name]
+    fun <AT:Act>getAct(name: String): AT? = this.acts[name] as AT?
 
     // TODO: test and document ... also, should this be the public method, or should it be something else?
     //  ... could combine with play, and make this private
@@ -72,11 +58,12 @@ class Score(
             // TODO maybe: handle fancy logic like hooks here?
             pattern.veins.forEach {
                 val veinDur = it["dur"] as Double
+                val machine = machinePalette[it["machine"] as String]
                 if (pattern.simultaneous) {
-                    createTrigger(runningTime, it)
+                    machine?.createTrigger(this, runningTime, it, )
                     if (veinDur > patternDur) patternDur = veinDur
                 } else {
-                    createTrigger(runningTime+patternDur, it)
+                    machine?.createTrigger(this, runningTime+patternDur, it)
                     patternDur += veinDur
                 }
             }
@@ -122,7 +109,7 @@ class Score(
                     val delayTime = triggerTime - prevTriggerTime
                     if (delayTime > 0) delay((delayTime).toDuration(DurationUnit.SECONDS))
                     launch {
-                        triggerList.forEach { tr: Trigger ->
+                        triggerList.forEach { tr: Trigger<*> ->
 
                             tr.trigger()
 

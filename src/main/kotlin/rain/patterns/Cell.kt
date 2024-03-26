@@ -20,14 +20,25 @@ open class Cell(
 
     // TODO: rename to veinNames
     //  AND IMPORTANT TODO ... how to automate (by method call that easily creates veins)
-    val traverseNames: MutableSet<String> by this.properties.apply { putIfAbsent("traverseNames", mutableSetOf("dur", "machine")) }
+    val traverseNames: MutableSet<String> by this.properties.apply {
+        putIfAbsent("traverseNames", mutableSetOf("dur", "machine"))
+    }
+
+    fun <BT:CellBuilder>build(callback: BT.()->Unit): Cell {
+        val cb = CellBuilder(this)
+        cb.apply(callback)
+        return this
+    }
 
     // TODO move the next two functions to be able to apply to any pattern?
     //  .. and figure out how to automate?
 //      .. and naming?
-    fun vein(key:String): Vein {
-        return Vein(this, key)
-    }
+
+
+    // CONSIDER THIS:
+//    operator fun invoke(key:String):Vein {
+//        return vein(key)
+//    }
 
     fun ani( // just a shortcut (since this will be used so much!)
         value:Double,
@@ -100,20 +111,38 @@ open class Cell(
 
 }
 
+open class CellBuilder(
+    val cell:Cell
+) {
+    fun vein(key:String): Vein {
+        return Vein(cell, key)
+    }
+
+    fun value(vararg values:Double?): Vein {
+        return vein("value")(*values)
+    }
+    fun dur(vararg values:Double?): Vein {
+        return vein("dur")(*values)
+    }
+    fun animate(vararg values:Double?): Vein {
+        return vein("animate")(*values)
+    }
+}
+
 // TODO: play around with this... esp. with property heritage!
-fun cell(
+fun <BT:CellBuilder>cell(
     key:String = rain.utils.autoKey(),
     machine:String? = null,
     act:String? = machine,
     properties: Map<String, Any?> = mapOf(),
     context: ContextInterface = LocalContext,
-    callback: Cell.()->Unit
+    callback: BT.()->Unit
 ):Cell {
     Cell(key, properties, context).apply {
         machine?.let { setVeinCycle("machine", it) }
         act?.let { setVeinCycle("act", it) }
-        apply(callback)
-        createMe() // TODO: verify, should this be moved first?
+        build(callback)
+        createMe()
         return this
     }
 }
