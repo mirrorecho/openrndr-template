@@ -69,10 +69,10 @@ open class Node(
         selectSelf.r(direction=direction, label=label, keys=keys, properties=properties)
 
     // TODO: should this be T?
-    override fun <T:LanguageNode?>targetsAs(label:String?, keys:List<String>?, properties:Map<String,Any>?): T? =
+    final override fun <T:LanguageNode?>targetsAs(label:String?, keys:List<String>?, properties:Map<String,Any>?): T? =
         r(direction= SelectDirection.RIGHT, label=label, keys=keys, properties=properties).n().firstAs()
 
-    override fun <T:LanguageNode>targetsOrMakeAs(relationshipLabel:String, makeTargetLabel:String, makeTargetKey:String?, keys:List<String>?, properties:Map<String,Any>?): T {
+    final override fun <T:LanguageNode>targetsOrMakeAs(relationshipLabel:String, makeTargetLabel:String, makeTargetKey:String?, keys:List<String>?, properties:Map<String,Any>?): T {
         r(direction= SelectDirection.RIGHT, label=relationshipLabel, keys=keys, properties=properties).n().firstAs<T>() ?.let{
             return it
         }

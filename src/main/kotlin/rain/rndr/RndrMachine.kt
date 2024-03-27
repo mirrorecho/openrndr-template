@@ -14,23 +14,57 @@ import rain.patterns.*
 
 
 // TODO: reconfigure so Act type param not needed at class level, only at fun level
+// TODO: are RndrMachines LEaves?
 abstract class RndrMachine<CBT:CellBuilder>(
     key:String = autoKey(),
     properties: Map<String, Any?> = mapOf(),
     context: ContextInterface = LocalContext,
 ): Machine, Leaf(key, properties, context) { // TODO: is Leaf the best parent class? (Relationships might not be simple tree patterns.)
 
-    fun createTrigger(score: Score, time:Double, properties: Map<String, Any?>): Trigger<*> {
-        return Trigger(score, this, time, this.properties + properties).apply {
+    // TODO: useful...?
+    // parentMachine?
+
+    // TODO maybe: this is a little wonky ... refactor?
+    private val targetMachineKeys: MutableSet<String> = mutableSetOf()
+    val targetMachines: SelectInterface get() = Select(keys=targetMachineKeys.toList())
+
+    open var single: Boolean by this.properties
+
+    // TODO: carefully document!
+    fun createTrigger(score: Score, time:Double, gate:Boolean?=true, cascade:Boolean=gate?:false,
+                      properties: Map<String, Any?>): Trigger<*> {
+
+        val triggerMachine = if (single) this else
+            context.make<RndrMachine<*>>(
+                primaryLabel, (properties["spawn"] as String?)?: autoKey(), this.properties, context)
+
+        if (!single) {
+            this.relate("SPAWN", triggerMachine)
+
+            targetMachines.asTypedSequence<RndrMachine<*>>().forEach {
+                // TODO: implement cascading properties
+                if (cascade) {
+                    it.createTrigger(score, time, gate, true, mapOf())
+                }
+            }
+        }
+
+        return Trigger(score, triggerMachine, time, gate, properties).apply {
             score.addTrigger(this, time)
         }
+
     }
 
-    fun <MT:RndrMachine<*>>makeAct(tr:Trigger<MT>): Act<MT> {
-        return Act(tr)
+    fun <RMT:RndrMachine<*>>targetMachine(relation:String, keyName:String): RMT {
+        val returnMachine = targetsOrMakeAs<RMT>(relation, primaryLabel, getProperty(keyName))
+        targetMachineKeys.add(returnMachine.key)
+        return returnMachine
     }
 
-    fun <RMT:RndrMachine<*>>relatedMachine(relation:String) = RelatedMachine<RMT>(this, relation)
+    // executed to mark machine as running and/or update machine
+    open fun triggerMe(trigger: Trigger<*>) {
+        // HOOK FOR what could happen with a trigger
+    }
 
     fun cell(
         key:String = autoKey(),
@@ -48,34 +82,31 @@ abstract class RndrMachine<CBT:CellBuilder>(
         }
     }
 
-    var single: Boolean by this.properties
-
 }
 
 
-class RelatedMachine<RMT:RndrMachine<*>>(
-    val source: RndrMachine<*>,
-    val relation: String,
-    val targetKey: String? = null
-) {
-
-    val target:RMT by lazy {source.targetsOrMakeAs(relation, source.primaryLabel, targetKey)}
-
-    // TODO is the return type OK here... why out???
-    // TODO: where is this called??????!!!!!
-    fun addTargetAct(sourceTrigger:Trigger<*>): Act<out RndrMachine<*>> {
-        val targetTrigger = target.createTrigger(sourceTrigger.score, sourceTrigger.runningTime, sourceTrigger.properties)
-        val act = targetTrigger.act
-        sourceTrigger.act.targetActs[relation] = targetTrigger.act
-        return act
-    }
-
-    operator fun invoke(sourceAct:Act<*>):Act<RMT> {
-        return sourceAct.targetActs[relation] as Act<RMT>
-    }
-
-
-}
+//class RelatedMachine<RMT:RndrMachine<*>>(
+//    val source: RndrMachine<*>,
+//    val relation: String,
+//    val targetKey: String? = null
+//) {
+//
+//    val target:RMT by lazy {source.targetsOrMakeAs(relation, source.primaryLabel, targetKey)}
+//
+//    // TODO is the return type OK here... why out???
+//    // TODO: where is this called??????!!!!!
+//    fun addTargetAct(sourceTrigger:Trigger<*>): Act<out RndrMachine<*>> {
+//        val targetTrigger = target.createTrigger(sourceTrigger.score, sourceTrigger.runningTime, sourceTrigger.properties)
+//        val act = targetTrigger.act
+//        sourceTrigger.act.targetActs[relation] = targetTrigger.act
+//        return act
+//    }
+//
+//    operator fun invoke(sourceAct:Act<*>):Act<RMT> {
+//        return sourceAct.targetActs[relation] as Act<RMT>
+//    }
+//
+//}
 
 //fun <T:Act>createRndrMachine(key:String= autoKey(),  single:Boolean=true, factory: (tr:Trigger<T>)->T): RndrMachine<T> {
 //    return RndrMachine<T>(key).apply {

@@ -4,8 +4,11 @@ import rain.interfaces.*
 import rain.language.*
 import rain.patterns.*
 
+
+
+
 // TODO: rename to MachineInterface
-interface Machine: LanguageNode {
+interface MachinePattern: Pattern {
 
     fun reset() { throw NotImplementedError() }
 

@@ -30,7 +30,9 @@ fun solve6() {
 
     }
 
-    val color1 = colorMachine("COLOR_1", true, "H", "S", "V", "A")
+    val color1 = Color("COLOR_1").apply {
+//        h.init = 90.0 // TODO - implement
+    }
 
     val circle = CircleMachine("CIRCLE_1").apply {
         radius.targetKey = "SHARED_RADIUS"

@@ -9,46 +9,10 @@ class Trigger<MT:RndrMachine<*>>(
     val score: Score,
     val rndrMachine: MT,
     val runningTime:Double = 0.0, // TODO: used?
-    val properties: Map<String, Any?> = mapOf()
-    // TODO... the trigger is what will need to connect an Act to its related/sub acts...
-    //  ... (properties enough to implement through?)
+    val gate: Boolean? = true, // true gates the machine on in the score rendering, false off, and null no change
+    val properties: Map<String, Any?> = mapOf(),
 ) {
 
-    val actName: String = if (rndrMachine.single) { rndrMachine.key } else { properties["act"] as String? ?: autoKey()  }
-    val act:Act<MT> = score.getAct(actName) ?: rndrMachine.makeAct(this)
-
-//    // TODO: maybe remove this... in order to avoid the complexity of cascading triggers/acts?
-//    //  or, perhaps rethink... part of the issue is that these value acts ARE NOT associated with a machine...
-//    fun propertyAsValueAct(propertyName:String, actName:String?=null):Value {
-//        return if (actName.isNullOrBlank()) Value(value=propertyAs(propertyName)) else Value(name=actName, value=propertyAs(propertyName))
-//    }
-
-    // TODO: implement?
-//    fun <RA:Act>relatedAct(relationshipName: String, actName: String?=null): RA {
-//        return rndrMachine.getRelatedAct(relationshipName, actName)
-//    }
-
-//    // TODO: combine this up into the Trigger itself (the Trigger IS THE EVENT!)
-//    fun animateEvent(name:String): AnimateEvent? {
-//        properties[name]?.let {
-//            return AnimateEvent(
-//                propertyAs(name),
-//                propertyAs("$name:animate"),
-//                propertyAs("$name:easing"),
-//                propertyAs("$name:init"),
-//            )
-//        }
-//        return null
-//    }
-
-    // TODO: used?
-//    fun <RA:Act>relatedAct(relationshipName: String, actName: String?=null, properties: Map<String, Any?> = mapOf() ): RA? {
-//        // TODO: pass-through act names
-//        rndrMachine.targetsAs<RndrMachine<RA, *>?>(relationshipName)?.let {
-//            return it.createTrigger(score, this.runningTime, properties).act
-//        }
-//        return null
-//    }
 
     val dur: Double by this.properties
 
@@ -58,15 +22,9 @@ class Trigger<MT:RndrMachine<*>>(
         return (properties[propertyName] ?: rndrMachine.properties[propertyName]) as P
     }
 
-//    fun setAct() {
-//        act = score.getAct(actName) ?: rndrMachine.actFactory?.invoke(this)
-//        act?.let { score.addAct(it) }
-//        // if (rndrMachine.actFactory == null) println("NO ACT FACTORY FOR " + rndrMachine.key)
-//    }
-
     fun trigger() {
-        println("Triggering: ${rndrMachine.key}, act:${act?.name}, properties:${properties}")
-        act?.triggerMe(this)
+        println("Triggering: ${rndrMachine.key}, properties:${properties}")
+        rndrMachine.triggerMe(this)
     }
 
 }

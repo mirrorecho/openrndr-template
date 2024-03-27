@@ -2,16 +2,18 @@ package rain.rndr
 
 import org.openrndr.Program
 import org.openrndr.math.Vector2
+import rain.interfaces.ContextInterface
+import rain.language.LocalContext
+import rain.patterns.CellBuilder
 import rain.utils.autoKey
 
 open class Position(
-    trigger:Trigger<*>,
-    xName: String? = null,
-    yName: String? = null
-): Act(trigger) {
+    key:String = autoKey(),
+    properties: Map<String, Any?> = mapOf(),
+    context: ContextInterface = LocalContext,
+):RndrMachine<CellBuilder>(key, properties, context) {
 
-    val x:Value = trigger.relatedAct("X", xName)!!
-    val y:Value = trigger.relatedAct("Y", yName)!!
+    override val label = LocalContext.getLabel("Position", "Machine", "Leaf") { k, p, c -> Color(k, p, c) }
 
     // TODO: what was the idea of the below method?
 //    fun setTargets(x:MachineFunc?, y:MachineFunc?) {

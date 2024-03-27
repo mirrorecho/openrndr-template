@@ -15,23 +15,18 @@ open class Color(
 
     override val label = LocalContext.getLabel("ColorMachine", "Machine", "Leaf") { k, p, c -> Color(k, p, c) }
 
+    val h: Value = targetMachine("H", "h_key")
+    val s: Value = targetMachine("S", "s_key")
+    val v: Value = targetMachine("V", "v_key")
+    val a: Value = targetMachine("A", "a_key")
 
-
-    // TODO: able to not have to pass the 2nd type parameter here?
-//    val h = relatedMachine<Value>("H")
-
-    val h: Value get() = targetsOrMakeAs("H", primaryLabel, getProperty("h_key"))
-    val s = relatedMachine<Value>("S")
-    val v = relatedMachine<Value>("V")
-    val a = relatedMachine<Value>("A")
-
-    fun colorHSVa(act:Act<Color>) = ColorHSVa(
-        act.targetActs["H"] as ValueAct as,
+    fun colorHSVa() = ColorHSVa(
+        h.value,
         s.value,
         v.value,
         a.value,
     )
 
-    fun colorRGBa(act:Act<Color>): ColorRGBa = colorHSVa(act).toRGBa()
+    fun colorRGBa(): ColorRGBa = colorHSVa().toRGBa()
 
 }

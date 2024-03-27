@@ -5,7 +5,6 @@ import rain.language.*
 
 // a node that represents an iterable over a group nodes ... each of which is connected
 // to this node, in a "pattern"
-// TODO maybe: is Pattern really an interface
 open class Leaf(
     key:String = rain.utils.autoKey(),
     properties: Map<String, Any?> = mapOf(),

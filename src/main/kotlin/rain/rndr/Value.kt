@@ -17,13 +17,6 @@ open class Value(
 
     var value: Double = 0.0
 
-}
-
-open class ValueAct(
-    trigger:Trigger<*>,
-
-): Act(trigger) {
-
     // TODO maybe: combine with animate() method below?
     override fun triggerMe(trigger: Trigger<*>) {
         super.triggerMe(trigger)
@@ -63,6 +56,7 @@ open class ValueAct(
     }
 
 }
+
 
 
 //fun createValues(single:Boolean=true, vararg keys: String) {
