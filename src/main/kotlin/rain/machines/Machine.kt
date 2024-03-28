@@ -5,32 +5,45 @@ import rain.language.*
 import rain.patterns.*
 
 
-
-
-// TODO: rename to MachineInterface
 interface MachinePattern: Pattern {
 
-    fun reset() { throw NotImplementedError() }
+//    fun reset() { throw NotImplementedError() }
 
     // NOTE: trigger is key here... it's what fundamentally makes a machine a machine
     // ... i.e. a machine is something that's "trigger-able"
     // TODO maybe use playerContext object (instead of just runningTime)
-    fun trigger(runningTime:Double, properties: Map<String, Any?>) { throw NotImplementedError() }
+    fun trigger(event:Event)
 
 }
 
+abstract class Machine(
+    key:String = rain.utils.autoKey(),
+    properties: Map<String, Any?> = mapOf(),
+    context: ContextInterface = LocalContext,
+): MachinePattern, Leaf(key, properties, context) {
+
+    override val label = LocalContext.getLabel("Printer", "Machine") { k, p, c -> Printer(k, p, c) }
+
+    override fun trigger(event:Event) {
+        // TODO: implement
+        println("PRINTER $key: " + event.properties)
+        println("--------------------------------")
+    }
+
+}
 
 open class Printer(
     key:String = rain.utils.autoKey(),
     properties: Map<String, Any?> = mapOf(),
     context: ContextInterface = LocalContext,
-): Machine, Leaf(key, properties, context) {
+): MachinePattern, Leaf(key, properties, context) {
 
     override val label = LocalContext.getLabel("Printer", "Machine") { k, p, c -> Printer(k, p, c) }
 
-
-    override fun trigger(runningTime:Double, properties: Map<String, Any?>) {
-        println("$runningTime: " + this.key + " " + properties.toString())
+    override fun trigger(event:Event) {
+        // TODO: implement
+        println("PRINTER $key: " + event.properties)
+        println("--------------------------------")
     }
 
 }

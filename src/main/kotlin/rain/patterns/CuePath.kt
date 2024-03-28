@@ -13,8 +13,7 @@ class CuePath(
 //    val ancestorCues: List<Cue> // needed?
 ) {
 
-    // TODO: maybe these should all be selects instead of lists?
-
+    // TODO: these should all be selects instead of lists!
     val aunts = listOf<Pattern>()
     val preceding = listOf<Pattern>()
     val following = listOf<Pattern>()
@@ -25,10 +24,8 @@ class CuePath(
     val previous: Pattern? = null
     val next: Pattern? = null
 
-    val properties: MutableMap<String, Any?> by lazy {
-        val returnMap = parent?.properties.orEmpty().toMutableMap()
-        parent?.cuePath?.let { returnMap.putAll(it.properties) }
-        returnMap
+    val properties: Map<String, Any?> by lazy {
+        parent?.properties.orEmpty() + parent?.cuePath?.properties.orEmpty()
     }
 
 

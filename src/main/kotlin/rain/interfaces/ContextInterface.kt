@@ -13,7 +13,7 @@ interface ContextInterface {
 
     fun registerLabel(label:LabelInterface)
 
-    fun get(labelName:String): LabelInterface?
+    operator fun get(labelName:String): LabelInterface?
 
     fun <T: LanguageItem>make(labelName:String, key:String, properties: Map<String, Any?> = mapOf(), context: ContextInterface=this): T
 

@@ -1,6 +1,5 @@
 package rain.rndr
 
-import org.openrndr.animatable.easing.Easing
 import rain.interfaces.ContextInterface
 import rain.language.LocalContext
 import rain.patterns.CellBuilder

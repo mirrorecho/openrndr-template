@@ -7,19 +7,31 @@ import  rain.machines.*
 import rain.patterns.*
 
 // OLD TODOS:
-// TODO: combine Machine and MachineFunc?
+// TODO: combine Machine and MachineFunc? (YES, DID IT!)
 // TODO: plan for connecting MachineFuncs to Machine via relationships
 // TODO: maybe this class should be abstract?
 // TODO: does this class have any purpose at all anymore now that renderOp also implemented on machineFunc?
-
-
 // TODO: reconfigure so Act type param not needed at class level, only at fun level
-// TODO: are RndrMachines LEaves?
+// TODO: are RndrMachines Laaves?
+
 abstract class RndrMachine<CBT:CellBuilder>(
     key:String = autoKey(),
     properties: Map<String, Any?> = mapOf(),
     context: ContextInterface = LocalContext,
-): Machine, Leaf(key, properties, context) { // TODO: is Leaf the best parent class? (Relationships might not be simple tree patterns.)
+): MachinePattern, Node(key, properties, context) { // TODO: is Leaf the best parent class? (Relationships might not be simple tree patterns.)
+
+    override val isAlter = false
+
+    override val isLeaf = false
+
+    override val branches = EmptySelect(context)
+
+    // TODO: implement hook logic here
+    override val leaves get() = EmptySelect(context)
+
+    override val nodes get() = EmptySelect(context)
+
+    override var cuePath: CuePath? = null
 
     // TODO: useful...?
     // parentMachine?
@@ -32,7 +44,7 @@ abstract class RndrMachine<CBT:CellBuilder>(
 
     // TODO: carefully document!
     fun createTrigger(score: Score, time:Double, gate:Boolean?=true, cascade:Boolean=gate?:false,
-                      properties: Map<String, Any?>): Trigger<*> {
+                      properties: Map<String, Any?>): Trigger {
 
         val triggerMachine = if (single) this else
             context.make<RndrMachine<*>>(
@@ -62,7 +74,7 @@ abstract class RndrMachine<CBT:CellBuilder>(
     }
 
     // executed to mark machine as running and/or update machine
-    open fun triggerMe(trigger: Trigger<*>) {
+    open fun triggerMe(trigger: Trigger) {
         // HOOK FOR what could happen with a trigger
     }
 

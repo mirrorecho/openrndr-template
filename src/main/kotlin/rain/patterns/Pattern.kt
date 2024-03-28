@@ -19,6 +19,23 @@ interface Pattern: LanguageNode {
     // set to an instance of CuePath if this node is created in the context of a TreeSelect
     var cuePath: CuePath?
 
+    // TODO: testing!
+    //TODO: below assumes that all ancestor properties should carry down... are we sure that's what we want?
+    val propertiesUp: Map<String, Any?> get() = properties + cuePath?.properties.orEmpty()
+
+    fun <T>getUp(name:String):T = propertiesUp[name] as T
+
+    fun saveDown() {
+        nodes.forEach { save() }
+    }
+
+    fun <T>vein(name: String): Sequence<T> = leaves.asSequence().map { it.properties[key] as T }
+
+    // TODO: does this work???
+    fun setVein(name: String, vararg values:Any) {
+        leaves.asSequence().zip(values.asSequence()).forEach { it.first[key] = it.second }
+    }
+
     // TODO: implement
     // abstract val parents: SelectInterface
 
@@ -35,39 +52,23 @@ interface Pattern: LanguageNode {
 // ===========================================================================================================
 
 // TODO: maybe rethink naming?
-interface CellPattern:Pattern {
+interface EventPattern:Pattern {
 
     var simultaneous: Boolean
 
-    val veins: Sequence<MutableMap<String, Any?>>
+    var machine: String? get() = getUp("machine")
+        set(value) { this["machine"]=value }
 
-    // TODO: naming?
-    // TOD: testing!
-    val propertiesWithHeritage: Map<String, Any?>
-        get() {
-            //TODO: below assumes that all ancestor properties should carry down... are we sure that's what we want?
-            return this.properties.toMutableMap().apply { this.putAll( cuePath?.properties.orEmpty() ) }
-        }
+    var machineKey: String? get() = getUp("machineKey")
+        set(value) { this["machineKey"]=value }
 
-    fun <T>propertyByVein(key: String): Sequence<T> = veins.map { it[key] as T }
+    var machinePath: String? get() = getUp("machinePath")
+        set(value) { this["machinePath"]=value }
 
-    // TODO: implement something like this for setting PARTIAL (or longer?) lists of values
-//    fun setPropertyByVein(key: String, values:Sequence<Any>) {
-//        veins.zip(values).forEach { it.first[key] = it.second }
-//    }
+    var gate: Boolean? get() = getUp("gate")
+        set(value) { this["gate"]=value }
 
-    // TODO: would be ideal to set defaults to these
-    // and TODO: how to handle lambdas?
+    val dur: Double?
 
-    // TODO: look into Kotlin Duration, also look into how OPENRNDR handles time
-    var dur:Sequence<Double>
-        get() = propertyByVein("dur")
-        set(values) { throw NotImplementedError() }
 
-    // the following probably not even needed since dur.sum() is so easy!
-//    val sumDur: Double get() = dur.sum()
-
-    var machine:Sequence<String?>
-        get() = propertyByVein("machine")
-        set(values) { throw NotImplementedError() }
 }

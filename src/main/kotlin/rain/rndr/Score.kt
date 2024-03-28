@@ -2,12 +2,10 @@ package rain.rndr
 
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import org.openrndr.Program
 import org.openrndr.application
 import org.openrndr.launch
 import rain.language.Palette
 import rain.patterns.CellPattern
-import rain.utils.autoKey
 import kotlin.time.DurationUnit
 import kotlin.time.toDuration
 

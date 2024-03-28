@@ -19,11 +19,11 @@ open class Tree(
 
     // TODO: make these by lazy
 
-    override val branches: TreeBranchesSelect get() = TreeBranchesSelect(context, this)
+    override val branches: SelectInterface get() = TreeBranchesSelect(context, this)
 
-    override val nodes: TreeNodesSelect get() = TreeNodesSelect(context, this)
+    override val nodes: SelectInterface get() = TreeNodesSelect(context, this)
 
-    override val leaves: TreeLeavesSelect get() = TreeLeavesSelect(context, this)
+    override val leaves: SelectInterface get() = TreeLeavesSelect(context, this)
 
     override var cuePath: CuePath? = null
 
@@ -70,51 +70,33 @@ open class Tree(
     }
 }
 
-// ===========================================================================================================
-
-open class CellTree(
-    key:String = rain.utils.autoKey(),
+open class EventTree(
+    key:String = autoKey(),
     properties: Map<String, Any?> = mapOf(),
     context: ContextInterface = LocalContext,
-): CellPattern, Tree(key, properties, context) {
+): EventPattern, Tree(key, properties, context) {
 
-    override val label = LocalContext.getLabel("CellTree", "Tree", "CellPattern", "Pattern") { k, p, c -> CellTree(k, p, c) }
+    override val label = LocalContext.getLabel("EventTree", "Tree", "EventPattern", "Pattern") { k, p, c -> EventTree(k, p, c) }
 
     override var simultaneous: Boolean by this.properties.apply { putIfAbsent("simultaneous", false) }
 
-//    // TODO: not elegant!
-//    override fun setInitProperties(existingProperties: MutableMap<String, Any?>) {
-//        super.setInitProperties(existingProperties)
-//        existingProperties.putIfAbsent("simultaneous", false)
+    override val dur: Double get() =
+        branches.asTypedSequence<EventPattern>().map { dur }.run {
+            if (simultaneous) { max() } else { sum() }
+        }
+
+
+    // TODO: use something like this?
+//    operator fun invoke(vararg patterns: Pattern): CellTree {
+//        this.extend(*patterns)
+//        return this
 //    }
 
-    // TODO maybe: should the default veins NOT include heritage? (and then create a separate veinsWithHeritage?)
-    // ... assume NO, that the below is fine
-    override val veins: Sequence<MutableMap<String, Any?>> get() = sequence {
-        // TODO: use cuePath to propogate parentage properties to veins
-        leaves.asTypedSequence<Cell>().forEach { c->
-            yieldAll( c.veins )
-        }
-    }
+    // TODO: implement cell building
+//    fun <BT: CellBuilder> build(callback: BT.() -> Unit): Cell {
+//        val cb = CellBuilder(this)
+//        cb.apply(callback)
+//        return this
+//    }
 
-    operator fun invoke(vararg patterns: Pattern): CellTree {
-        this.extend(*patterns)
-        return this
-    }
-
-}
-
-// ===========================================================================================================
-
-fun seq(key:String = autoKey(), properties: Map<String, Any?> = mapOf(), context: ContextInterface = LocalContext): CellTree {
-    return CellTree(key, properties, context).apply {
-        simultaneous = false
-        createMe()
-    }
-}
-fun par(key:String = autoKey(), properties: Map<String, Any?> = mapOf(), context: ContextInterface = LocalContext): CellTree {
-    return CellTree(key, properties, context).apply {
-        simultaneous = true
-        createMe()
-    }
 }

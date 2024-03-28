@@ -1,13 +1,11 @@
 package rain.rndr
 
-
 import org.openrndr.Program
 import rain.utils.*
 import rain.interfaces.*
 import rain.language.*
 import  rain.machines.*
 import rain.patterns.*
-
 
 ]
 open class Circle(
