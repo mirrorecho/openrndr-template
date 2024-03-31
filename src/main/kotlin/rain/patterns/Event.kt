@@ -7,7 +7,35 @@ import rain.machines.*
 import rain.rndr.RndrMachine
 import rain.rndr.Value
 import rain.utils.*
+import kotlin.math.absoluteValue
 
+// =================================================================================================================
+
+// TODO: maybe rethink naming?
+interface EventPattern:Pattern {
+
+    var simultaneous: Boolean
+
+    var machine: String? get() = getUp("machine")
+        set(value) { this["machine"]=value }
+
+    var machineKey: String? get() = getUp("machineKey")
+        set(value) { this["machineKey"]=value }
+
+    var machinePath: String? get() = getUp("machinePath")
+        set(value) { this["machinePath"]=value }
+
+    var gate: Boolean? get() = getUp("gate")
+        set(value) { this["gate"]=value }
+
+    val dur: Double?
+
+}
+
+// =================================================================================================================
+
+
+// TODO: for both this and ValueEvent, determine what should use getUp/propertiesUp vs simpler by this.properties
 open class Event(
     key:String = autoKey(),
     properties: Map<String, Any?> = mapOf(),
@@ -21,12 +49,15 @@ open class Event(
     override var dur: Double? by this.properties
     override var simultaneous: Boolean by this.properties.apply { putIfAbsent("simultaneous", false) }
 
+    open val triggersLabel: LabelInterface? get() = machine?.let { context[it] }
+
     fun relateMachine() {
         machineKey.let {mk->
             if (gate==true) {
-                machine?.let { m ->
+                triggersLabel?.let { tl ->
                     (mk?: autoKey()).also { mkn->
-                        context[m]?.make(mkn, properties, context)?.run { createMe() }
+                        // NOTE: not passing along even properties here just yet... they will be supplied at the time of triggering
+                        tl.make(mkn, context=context).apply { mergeMe() }
                     }
                 }
             } else mk?.let {mko->
@@ -50,17 +81,23 @@ open class Event(
 //    }
 }
 
+// =================================================================================================================
+
 class ValueEvent(
-    key:String = rain.utils.autoKey(),
+    key:String = autoKey(),
     properties: Map<String, Any?> = mapOf(),
     context: ContextInterface = LocalContext,
 ): Event(key, properties, context) {
+
     override val label = LocalContext.getLabel("ValueEvent", "Event", "Leaf", "EventPattern", "Pattern") { k, p, c -> ValueEvent(k, p, c) }
+
+    override val triggersLabel = context["Value"]
 
     var value: Double? by this.properties
 
-    override var machine: String? get() = getUp("machine")
-        set(machine) { this["machine"]=machine }
+//    // TODO: worth keeping this?
+    override var machine: String? get() = "Event"
+        set(value) { this["machine"]="Event" }
 
     var initValue: Double? by this.properties
     var easing: String? by this.properties
@@ -68,8 +105,15 @@ class ValueEvent(
     var animateDur: Double? by this.properties
 
     val isAnimation: Boolean get() = animateDur != null
+
     val easingTyped get() = Easing.valueOf(easing ?: "None")
-    val durMs get() = dur?.let { (it * 1000.0).toLong() } ?: 0
+
+    val durMs get() = dur?.let { (it * 1000.0).toLong() } ?: (0).toLong()
+
+    // TODO: maybe ... simplify?
+    val animateDurMs get() =  (animateDur?.let { (it * 1000.0).toLong() } ?: (0).toLong()).let {
+        if (it == (0).toLong() || it.absoluteValue > durMs) durMs else it
+    }
 
     // val delay: Double? = null, // TODO maybe: (consider implementing)
     // val initDur: Double? = null, // TODO maybe: (consider implementing)

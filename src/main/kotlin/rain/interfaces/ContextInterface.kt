@@ -2,6 +2,7 @@ package rain.interfaces
 
 import org.openrndr.Program
 import rain.language.FancyProperty
+import rain.language.Label
 import rain.language.Relationship
 
 interface ContextInterface {

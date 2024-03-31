@@ -13,7 +13,7 @@ open class Color(
     context: ContextInterface = LocalContext,
 ):RndrMachine<CellBuilder>(key, properties, context) {
 
-    override val label = LocalContext.getLabel("ColorMachine", "Machine", "Leaf") { k, p, c -> Color(k, p, c) }
+    override val label = LocalContext.getLabel("ColorMachine", "RndrMachine", "Machine", "Leaf") { k, p, c -> Color(k, p, c) }
 
     val h: Value = targetMachine("H", "h_key")
     val s: Value = targetMachine("S", "s_key")

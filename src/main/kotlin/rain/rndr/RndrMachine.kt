@@ -26,7 +26,7 @@ abstract class RndrMachine<CBT:CellBuilder>(
 
     override val branches = EmptySelect(context)
 
-    // TODO: implement hook logic here
+    // TODO: implement hook logic here?
     override val leaves get() = EmptySelect(context)
 
     override val nodes get() = EmptySelect(context)
@@ -40,59 +40,63 @@ abstract class RndrMachine<CBT:CellBuilder>(
     private val targetMachineKeys: MutableSet<String> = mutableSetOf()
     val targetMachines: SelectInterface get() = Select(keys=targetMachineKeys.toList())
 
-    open var single: Boolean by this.properties
+    override fun trigger(event:Event) {
+        // TODO: implement gatting and such
+        if (event.gate==true) {
 
-    // TODO: carefully document!
-    fun createTrigger(score: Score, time:Double, gate:Boolean?=true, cascade:Boolean=gate?:false,
-                      properties: Map<String, Any?>): Trigger {
-
-        val triggerMachine = if (single) this else
-            context.make<RndrMachine<*>>(
-                primaryLabel, (properties["spawn"] as String?)?: autoKey(), this.properties, context)
-
-        if (!single) {
-            this.relate("SPAWN", triggerMachine)
-
-            targetMachines.asTypedSequence<RndrMachine<*>>().forEach {
-                // TODO: implement cascading properties
-                if (cascade) {
-                    it.createTrigger(score, time, gate, true, mapOf())
-                }
-            }
         }
-
-        return Trigger(score, triggerMachine, time, gate, properties).apply {
-            score.addTrigger(this, time)
-        }
-
     }
 
+
+    open var single: Boolean by this.properties
+
+//    fun createTrigger(score: Score, time:Double, gate:Boolean?=true, cascade:Boolean=gate?:false,
+//                      properties: Map<String, Any?>): Trigger {
+//
+//        val triggerMachine = if (single) this else
+//            context.make<RndrMachine<*>>(
+//                primaryLabel, (properties["spawn"] as String?)?: autoKey(), this.properties, context)
+//
+//        if (!single) {
+//            this.relate("SPAWN", triggerMachine)
+//
+//            targetMachines.asTypedSequence<RndrMachine<*>>().forEach {
+//                // TODO: implement cascading properties
+//                if (cascade) {
+//                    it.createTrigger(score, time, gate, true, mapOf())
+//                }
+//            }
+//        }
+//
+//        return Trigger(score, triggerMachine, time, gate, properties).apply {
+//            score.addTrigger(this, time)
+//        }
+//
+//    }
+
     fun <RMT:RndrMachine<*>>targetMachine(relation:String, keyName:String): RMT {
-        val returnMachine = targetsOrMakeAs<RMT>(relation, primaryLabel, getProperty(keyName))
+        val returnMachine = targetsOrMakeAs<RMT>(relation, primaryLabel, getProperty(keyName)?: autoKey())
         targetMachineKeys.add(returnMachine.key)
         return returnMachine
     }
 
-    // executed to mark machine as running and/or update machine
-    open fun triggerMe(trigger: Trigger) {
-        // HOOK FOR what could happen with a trigger
-    }
 
-    fun cell(
-        key:String = autoKey(),
-        act:String? = this.key,
-        properties: Map<String, Any?> = mapOf(),
-        context: ContextInterface = LocalContext,
-        callback: CBT.()->Unit
-    ): Cell {
-        Cell(key, properties, context).apply {
-            setVeinCycle("machine", )
-            act?.let { setVeinCycle("act", it) }
-            build(callback)
-            createMe()
-            return this
-        }
-    }
+    // TODO: implement
+//    fun cell(
+//        key:String = autoKey(),
+//        act:String? = this.key,
+//        properties: Map<String, Any?> = mapOf(),
+//        context: ContextInterface = LocalContext,
+//        callback: CBT.()->Unit
+//    ): Cell {
+//        Cell(key, properties, context).apply {
+//            setVeinCycle("machine", )
+//            act?.let { setVeinCycle("act", it) }
+//            build(callback)
+//            createMe()
+//            return this
+//        }
+//    }
 
 }
 

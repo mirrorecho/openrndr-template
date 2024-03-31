@@ -1,10 +1,17 @@
 package rain.rndr
 
+import org.openrndr.animatable.Animatable
 import rain.interfaces.ContextInterface
 import rain.language.LocalContext
 import rain.patterns.CellBuilder
+import rain.patterns.Event
+import rain.patterns.ValueEvent
 import rain.utils.autoKey
 import kotlin.math.absoluteValue
+
+class AnimationValue(
+    var value: Double
+):Animatable()
 
 open class Value(
     key:String = autoKey(),
@@ -14,40 +21,39 @@ open class Value(
 
     override val label = LocalContext.getLabel("RndrMachine", "Machine", "Leaf") { k, p, c -> Value(k, p, c) }
 
-    var value: Double = 0.0
+    var animationValue = AnimationValue(0.0)
 
-    // TODO maybe: combine with animate() method below?
-    override fun triggerMe(trigger: Trigger<*>) {
-        super.triggerMe(trigger)
+    var value get() = animationValue.value
+        set(v) {animationValue.value=v}
 
-        // TODO: confirm, is this the right "name" here?
-        //  ALSO: this impletation will get confusing with different kindes of relationships, acts, etc.
-        trigger.animateEvent(name)?.let {anim ->
-            if (anim.isAnimation) {
-                println("ANIM $name: ---------------------- ")
-                println("value: ${anim.value}")
-                println("dur: ${anim.dur}")
-                println("easing: ${anim.easing}")
-                println("initValue: ${anim.initValue}")
-                anim.initValue?.let { value = it }
+    // TODO: OK that this isn't an override (due to more specific event type?)
+    fun trigger(event: ValueEvent) {
+        super.trigger(event)
 
-                // TODO: document this logic ...
-                val animMs = if (anim.durMs == (0).toLong() || anim.durMs.absoluteValue > trigger.durMs) trigger.durMs else anim.durMs
+        value?.let {v ->
+            if (event.isAnimation) {
+                println("ANIM event ${event.key}: ---------------------- ")
+                println("value: ${event.value}")
+                println("animateDur: ${event.animateDur}")
+                println("easing: ${event.easing}")
+                println("initValue: ${event.initValue}")
+                event.initValue?.let { value = it }
 
-                if (animMs >= 0) {
-                    ::value.animate(anim.value, animMs, anim.easingTyped)
-                    ::value.complete()
-                } else {
-                    // TODO, a better way to keep current value for the duration instead of "animating" it?
-                    ::value.animate(value, trigger.durMs+animMs)
-                    ::value.complete()
-                    ::value.animate(anim.value, animMs.absoluteValue, anim.easingTyped)
-                    ::value.complete()
+                animationValue.apply {
+                    if (event.animateDurMs >= 0) {
+                        ::value.animate(v, event.animateDurMs, event.easingTyped)
+                        ::value.complete()
+                    } else {
+                        // TODO, a better way to keep current value for the duration instead of "animating" it?
+                        ::value.animate(value, event.durMs + event.animateDurMs)
+                        ::value.complete()
+                        ::value.animate(v, event.animateDurMs.absoluteValue, event.easingTyped)
+                        ::value.complete()
+                    }
                 }
-
             } else {
-                value = anim.value
-                println("STATIC VALUE $name: $value")
+                value = v
+                println("STATIC VALUE ${event.key}: ${event.value}")
             }
         }
 

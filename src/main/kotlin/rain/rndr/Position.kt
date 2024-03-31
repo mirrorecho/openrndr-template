@@ -13,29 +13,14 @@ open class Position(
     context: ContextInterface = LocalContext,
 ):RndrMachine<CellBuilder>(key, properties, context) {
 
-    override val label = LocalContext.getLabel("Position", "Machine", "Leaf") { k, p, c -> Color(k, p, c) }
+    override val label = LocalContext.getLabel("Position", "RndrMachine", "Machine", "Leaf") { k, p, c -> Color(k, p, c) }
 
-    // TODO: what was the idea of the below method?
-//    fun setTargets(x:MachineFunc?, y:MachineFunc?) {
-//        if (x == null) {
-//            val xFunc = MachineFunc()
-//            // TODO, should be specific type(label) of relationship for POSITION_X
-//            Relationship(source_key = this.key, target_key = xFunc.key).createMe()
-//        } else {}
-//    }
+    val x: Value = targetMachine("X", "x_key")
+    val y: Value = targetMachine("Y", "y_key")
 
     // TODO: accommodate local storage
     fun vector(program: Program): Vector2 = Vector2(
         x.value * program.width,
         y.value * program.height,
     )
-}
-
-fun positionMachine(key:String= autoKey(), single:Boolean=true,
-                 xKey:String = "X",
-                 yKey:String = "Y",
-): RndrMachine<Position> {
-    return createRndrMachine(key, single) { tr -> Position(tr) }.apply {
-        relate("X", xKey); relate("Y", yKey);
-    }
 }

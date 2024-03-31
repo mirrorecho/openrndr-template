@@ -48,27 +48,3 @@ interface Pattern: LanguageNode {
 //    # node_hooks: Iterable[Callable[["rain.Pattern", "rain.Pattern"], "rain.Pattern"]] = ()
 //
 }
-
-// ===========================================================================================================
-
-// TODO: maybe rethink naming?
-interface EventPattern:Pattern {
-
-    var simultaneous: Boolean
-
-    var machine: String? get() = getUp("machine")
-        set(value) { this["machine"]=value }
-
-    var machineKey: String? get() = getUp("machineKey")
-        set(value) { this["machineKey"]=value }
-
-    var machinePath: String? get() = getUp("machinePath")
-        set(value) { this["machinePath"]=value }
-
-    var gate: Boolean? get() = getUp("gate")
-        set(value) { this["gate"]=value }
-
-    val dur: Double?
-
-
-}
