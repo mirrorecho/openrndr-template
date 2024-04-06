@@ -4,74 +4,73 @@ import rain.interfaces.*
 import rain.language.Select
 import rain.patterns.*
 
-abstract class TreeSelect(
+abstract class TreeSelect<T:Tree>(
     context:ContextInterface,
     protected val selfNode: Tree,
-    ): Select(context = context) {
+    ): Select<T>(context = context) {
 
     // TODO maybe... by lazy appropriate here? (assume yes)
     override val keys by lazy { asSequence().map{it.key}.toList() }
 
     // child classes must implement asSequence to avoid problems!
-    override fun asSequence(): Sequence<Pattern> = getBranchCues().map { throw(NotImplementedError()) }
+    override fun asSequence(): Sequence<T> = getBranchCues().map { throw(NotImplementedError()) }
 
     fun getAncestors() = this.selfNode.cuePath?.ancestors.orEmpty() + listOf(this.selfNode)
 
     fun getBranchCues(): Sequence<Cue> = sequence {
-        this@TreeSelect.selfNode.r(SelectDirection.RIGHT, "CUES_FIRST").n().first?.let {
-            var branchCue = it as Cue?
+        this@TreeSelect.selfNode.r(SelectDirection.RIGHT, "CUES_FIRST").n<Cue>().first?.let {
+            var branchCue: Cue? = it
             while (branchCue != null) {
-//                println(branchCue)
                 yield(branchCue)
-                branchCue = branchCue.r(SelectDirection.RIGHT, "CUES_NEXT").n().first as Cue?
+                branchCue = branchCue.r(SelectDirection.RIGHT, "CUES_NEXT").n<Cue>().first
             }
         }
     }
 
-    fun getBranches(): Sequence<Pattern> = getBranchCues().map {
+    fun <BT:Tree>getBranches(): Sequence<BT> = getBranchCues().map {
         // TODO: handle branch hooks
         // TODO: test cuesPattern ancestors
         val myCuePath = CuePath(it, this@TreeSelect.getAncestors())
-        it.cuesPattern.apply {
-            println("setting cuePath for: " + this.toString())
+        it.cuesTree<BT>()!!.apply {
+//            println("setting cuePath for: " + this.toString())
             this.cuePath = myCuePath
         }
     }
 }
 // ===========================================================================================================
 
-open class TreeBranchesSelect(
+open class TreeBranchesSelect<T:Tree>(
     context:ContextInterface,
     selfNode: Tree,
-): TreeSelect(context = context, selfNode=selfNode) {
+): TreeSelect<T>(context = context, selfNode=selfNode) {
 
-    override fun asSequence(): Sequence<Pattern> = getBranches()
+    override fun asSequence(): Sequence<T> = getBranches()
 
 }
 // ===========================================================================================================
 
-open class TreeLeavesSelect(
+open class TreeLeavesSelect<T:Leaf>(
     context:ContextInterface,
     selfNode: Tree,
-): TreeSelect(context = context, selfNode=selfNode) {
+): TreeSelect<T>(context = context, selfNode=selfNode) {
 
-    override fun asSequence(): Sequence<Leaf> = sequence {
-        this@TreeLeavesSelect.getBranches().forEach {
-            yieldAll(it.leaves.asTypedSequence())
+    override fun asSequence(): Sequence<T> = sequence {
+        this@TreeLeavesSelect.getBranches<Tree>().forEach {
+            yieldAll( TreeLeavesSelect<T>(context, it).asSequence() )
         }
     }
 }
 // ===========================================================================================================
 
-open class TreeNodesSelect(
+open class TreeNodesSelect<T:Tree>(
     context:ContextInterface,
-    selfNode: Tree,
-): TreeSelect(context = context, selfNode=selfNode) {
+    val typedSelfNode: T,
+): TreeSelect<T>(context = context, selfNode=typedSelfNode) {
 
-    override fun asSequence(): Sequence<Pattern> = sequence {
-        yield(selfNode)
-        this@TreeNodesSelect.getBranches().forEach {
-            yieldAll(it.nodes.asTypedSequence())
+    override fun asSequence(): Sequence<T> = sequence {
+        yield(typedSelfNode)
+        this@TreeNodesSelect.getBranches<T>().forEach {
+            yieldAll( TreeNodesSelect(context, it).asSequence() )
         }
     }
 }

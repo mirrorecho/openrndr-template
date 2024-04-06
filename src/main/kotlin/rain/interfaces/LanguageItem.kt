@@ -1,67 +1,55 @@
 package rain.interfaces
 
-import rain.language.Item
-import rain.language.TargetedRelationshipSelect
-import rain.utils.autoKey
+interface Labelable<T: LanguageItem> {
+    val label: LabelInterface<out T>
+}
 
-interface LanguageItem: GraphableItem {
+interface LanguageItem: GraphableItem, Labelable<LanguageItem>  {
 
-    val label: LabelInterface
+    override val labels: List<String> get() = label.allNames
 
-    // TODO include parent classes in label list
-    override val labels: List<String> get() = this.label.labels
+    override val primaryLabel: String get() = label.name
 
-    override val primaryLabel: String get() = this.label.primary
-
-    val context: ContextInterface
+    val context: ContextInterface get() = label.context
 
     val graph: GraphInterface get() = this.context.graph
 
-    val selectSelf: SelectInterface
-
-    fun save(): LanguageItem {
-        context.graph.save(this)
-        return this
+    fun save() {
+        graph.save(this)
+//        return this
     }
 
-    fun read(): LanguageItem {
-        graph.read(this)
-        return this
-    }
+//    fun read() {
+//        graph.read(this)
+////        return this
+//    }
 
     fun delete() {
         graph.delete(this.key)
     }
 
-    fun mergeMe(): LanguageItem {
+    fun mergeMe() {
         graph.merge(this)
-        return this
+//        return this
     }
 
-    // TODO: this is inconvenient because we lose the specific type information when returning this as a LanguageItem
-    // remove/rethink?
-    fun createMe(): LanguageItem {
+    fun createMe() {
         graph.create(this)
-        return this
+//        return this
     }
 
-    fun <T>getAs(n:String) = this[n] as T
+//    fun <T>getAs(n:String) = this[n] as T
 
 }
+
+// TODO: why these interfaces below...?
 
 // ===========================================================================================================
 
 interface LanguageNode: LanguageItem, GraphableNode {
-    fun r(direction: SelectDirection, label:String?=null, keys:List<String>?=null, properties:Map<String,Any>?=null): SelectInterface
 
-    // TODO: is this even necessary in this interface? Or just include in the Node class?
-    fun <T:LanguageNode?>targetsAs(label:String?=null, keys:List<String>?=null, properties:Map<String,Any>?=null): T?
-
-    fun <T:LanguageNode>targetsOrMakeAs(relationshipLabel:String, makeTargetLabel:String, makeTargetKey:String?=null, keys:List<String>?=null, properties:Map<String,Any>?=null): T
 }
 
 // ===========================================================================================================
 
-interface LanguageRelationship: LanguageItem, GraphableRelationship {
-
-}
+interface LanguageRelationship: LanguageItem, GraphableRelationship {}

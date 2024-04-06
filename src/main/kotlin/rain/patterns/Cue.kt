@@ -16,11 +16,11 @@ open class Cue(
     // TODO: these all need tests!
     // also TODO: should these be by lazy?
 
-    val cuesPattern: Pattern get() = r(SelectDirection.RIGHT, "CUES").n().first as Pattern
+    fun <T:Tree>cuesTree() = r(SelectDirection.RIGHT, "CUES").n<T>().first
 
-    val cuesNextPattern: Pattern get() = r(SelectDirection.RIGHT, "CUES_NEXT").n().r(SelectDirection.RIGHT, "CUES").n().first as Pattern
+    fun <T:Tree>cuesNextTree() = r(SelectDirection.RIGHT, "CUES_NEXT").n<Cue>().r(SelectDirection.RIGHT, "CUES").n<T>().first
 
-    val cuesPrevPattern: Pattern get() = r(SelectDirection.LEFT, "CUES_NEXT").n().r(SelectDirection.RIGHT, "CUES").n().first as Pattern
+    fun <T:Tree>cuesPrevTree() = r(SelectDirection.LEFT, "CUES_NEXT").n<Cue>().r(SelectDirection.RIGHT, "CUES").n<T>().first
 
 
 //    # # TO CONSIDER: would this be used?

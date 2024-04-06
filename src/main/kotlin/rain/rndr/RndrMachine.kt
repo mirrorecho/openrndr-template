@@ -14,11 +14,11 @@ import rain.patterns.*
 // TODO: reconfigure so Act type param not needed at class level, only at fun level
 // TODO: are RndrMachines Laaves?
 
-abstract class RndrMachine<CBT:CellBuilder>(
+abstract class RndrMachine(
     key:String = autoKey(),
-    properties: Map<String, Any?> = mapOf(),
-    context: ContextInterface = LocalContext,
-): MachinePattern, Node(key, properties, context) { // TODO: is Leaf the best parent class? (Relationships might not be simple tree patterns.)
+): MachinePattern, Node(key) { // TODO: is Leaf the best parent class? (Relationships might not be simple tree patterns.)
+    companion object : NodeCompanion<RndrMachine>(Node.childLabel { k -> Node(k) as RndrMachine })
+    override val label: NodeLabel<out RndrMachine> = RndrMachine.label
 
     override val isAlter = false
 
@@ -74,8 +74,9 @@ abstract class RndrMachine<CBT:CellBuilder>(
 //
 //    }
 
-    fun <RMT:RndrMachine<*>>targetMachine(relation:String, keyName:String): RMT {
-        val returnMachine = targetsOrMakeAs<RMT>(relation, primaryLabel, getProperty(keyName)?: autoKey())
+    fun <RMT:RndrMachine>targetMachine(rLabel:RelationshipLabel, nLabel:NodeLabel<RMT>, keyName:String): RMT {
+        // TODO: implement keyName?
+        val returnMachine = targetsOrMake(rLabel, nLabel)
         targetMachineKeys.add(returnMachine.key)
         return returnMachine
     }

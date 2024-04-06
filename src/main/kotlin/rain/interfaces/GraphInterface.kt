@@ -21,9 +21,9 @@ interface GraphInterface {
 
     fun delete(key: String)
 
+    fun <T: LanguageNode>selectNodes(select: SelectInterface<T>):Sequence<T>
 
-    // TODO maybe: could this be a val?
-    fun <T: LanguageItem>selectItems(select: SelectInterface):Sequence<T>
+    fun <T: LanguageRelationship>selectRelationships(select: SelectInterface<T>):Sequence<T>
 
 //    fun <T: LanguageItem>selectItems(select: SelectInterface, factory:):Sequence<T>
 

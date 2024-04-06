@@ -1,6 +1,6 @@
 package rain.patterns
-
 import rain.interfaces.*
+import rain.language.*
 
 // a node that represents an iterable over a group nodes ... each of which is connected
 // to this node, in a "pattern"
@@ -10,11 +10,11 @@ interface Pattern: LanguageNode {
 
     val isLeaf: Boolean
 
-    val branches: SelectInterface
+    val branches: Select<Tree>
 
-    val leaves: SelectInterface
+    val leaves: Select<Leaf>
 
-    val nodes: SelectInterface
+    val nodes: Select<Tree>
 
     // set to an instance of CuePath if this node is created in the context of a TreeSelect
     var cuePath: CuePath?
@@ -25,11 +25,14 @@ interface Pattern: LanguageNode {
 
     fun <T>getUp(name:String):T = propertiesUp[name] as T
 
+    fun <T:Item>getSelect(select: Select<T> = Select(context=context, selectFrom=this.selectSelf) ) {
+    }
+
     fun saveDown() {
         nodes.forEach { save() }
     }
 
-    fun <T>vein(name: String): Sequence<T> = leaves.asSequence().map { it.properties[key] as T }
+//    fun <T>vein(name: String): Sequence<T> = leaves.asSequence().map { it.properties[key] as T }
 
     // TODO: does this work???
     fun setVein(name: String, vararg values:Any) {

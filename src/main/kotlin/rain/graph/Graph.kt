@@ -122,7 +122,7 @@ class Graph: GraphInterface {
 
     override fun save(item: GraphableItem) {
         this.checkKey(item.key)
-        this.data[item.key]?.let { it.updatePropertiesFrom(item.properties) }
+        this.data[item.key]?.updatePropertiesFrom(item.properties)
     }
 
     override fun delete(key:String) {
@@ -137,21 +137,46 @@ class Graph: GraphInterface {
 
     val size: Int get() = this.data.size
 
-    override fun <T: LanguageItem>selectItems(select: SelectInterface):Sequence<T> = sequence {
-        selectLocalItems(select).forEach {
-            yield(
-                if (it is GraphRelationship) select.context.makeRelationship(it)
-                else select.context.make(it)
-            )
+
+    override fun <T: LanguageNode>selectNodes(select: SelectInterface<T>):Sequence<T> = sequence {
+        selectLocalNodes(select).forEach {
+            yield( select.label.makeFrom(it) )
         }
     }
 
-    private fun selectLocalItems(select:SelectInterface):Sequence<GraphItem> {
+    override fun <T: LanguageRelationship>selectRelationships(select: SelectInterface<T>):Sequence<T> = sequence {
+        selectLocalRelationships(select).forEach {
+            yield( select.label.makeFrom(it) )
+        }
+    }
+
+    private fun selectLocalNodes(select:SelectInterface<*>):Sequence<GraphNode> {
+        var mySequence: Sequence<GraphNode>
+        select.selectFrom?.let {
+            mySequence = when (select.direction) {
+
+                SelectDirection.RIGHT -> sequence {
+                    selectLocalNodes(it).forEach { n->
+                        n.sourcesFor.forEach { yield(it.key) } } }
+                }
+            }
+        }
+    }
+
+    private fun selectLocalRelationships(select:SelectInterface<*>):Sequence<GraphRelationship> {
+        var mySequence: Sequence<GraphRelationship>
+
+    }
+
+    private fun selectLocalItems(select:SelectInterface<*>):Sequence<GraphItem> {
         var mySequence: Sequence<GraphItem>
 
         if (select.selectFrom != null) {
             val fromSequence = selectLocalItems(select.selectFrom!!)
             mySequence = when (select.direction) {
+
+                // TODO: refactor to deal with nods or relationships without having to cast
+
                 SelectDirection.RIGHT -> sequence {
                     fromSequence.forEach { n ->
                         (n as GraphNode).sourcesFor.forEach { yield(it.key) }
@@ -170,10 +195,10 @@ class Graph: GraphInterface {
             // below for the original select ... it's purely a filter ... won't re-order or duplicate items
             if (!select.keys.isNullOrEmpty()) mySequence = mySequence.filter { select.keys!!.contains(it.key) }
 
-            if (!select.label.isNullOrBlank()) mySequence = mySequence.filter { it.labels.contains(select.label!!) }
+            if (!select.label.isRoot) mySequence = mySequence.filter { it.labels.contains(select.label.name) }
 
         } else {
-            val myMap = if (select.label.isNullOrBlank()) data else typeIndex[select.label].orEmpty()
+            val myMap = if (select.label.isRoot) data else typeIndex[select.label.name].orEmpty()
 
             mySequence = if (!select.keys.isNullOrEmpty() )
                 select.keys?.asSequence().orEmpty().mapNotNull { k-> myMap[k] }

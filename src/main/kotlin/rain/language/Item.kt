@@ -1,24 +1,21 @@
 package rain.language
 
 import rain.interfaces.*
+import rain.rndr.rndr
+
 import rain.utils.autoKey
+import kotlin.reflect.KMutableProperty0
 
 
 // ===========================================================================================================
 
 abstract class Item(
     override val key:String,
-    properties: Map<String, Any?>,
-    override val context: ContextInterface
 ): LanguageItem {
 
-    // TODO: not so elegant way to initialize properties... rethink?
-    open fun setInitProperties(existingProperties: MutableMap<String, Any?>) {
-    }
+    final override val properties: MutableMap<String, Any?> = mutableMapOf()
 
-    final override val properties: MutableMap<String, Any?> = properties.toMutableMap().apply { setInitProperties(this) }
-
-    override val selectSelf: Select get() = SelfSelect(this.context, this)
+    // TODO: worth keeping the fancy properties?? KISS!!!
 
     fun <T>getFancyProperty(fancyName: String): FancyProperty<T> {
         return context.getFancyProperty(fancyName)
@@ -58,80 +55,139 @@ abstract class Item(
 
 open class Node(
     key:String = autoKey(),
-    properties: Map<String, Any?> = mapOf(),
-    context:ContextInterface = LocalContext,
-): LanguageNode, Item(key, properties, context) {
+): LanguageNode, Item(key) {
+    companion object : NodeCompanion<Node>( rootLabel {k->Node(k) } )
+    override val label:NodeLabel<out Node> = Node.label
 
-    // TODO: move into class args? or just list of labels in class args?
-    override val label = LocalContext.getLabel("NODE") { k, p, c -> Node(k, p, c) }
+    val selectSelf by lazy { SelectSelf(this) }
 
-    override fun r(direction: SelectDirection, label:String?, keys:List<String>?, properties:Map<String,Any>?): TargetedRelationshipSelect =
-        selectSelf.r(direction=direction, label=label, keys=keys, properties=properties)
+    protected open val autoCreateTargets:List<KMutableProperty0<out CachedTarget<out Node>>> = listOf()
 
-    // TODO: should this be T?
-    final override fun <T:LanguageNode?>targetsAs(label:String?, keys:List<String>?, properties:Map<String,Any>?): T? =
-        r(direction= SelectDirection.RIGHT, label=label, keys=keys, properties=properties).n().firstAs()
-
-    final override fun <T:LanguageNode>targetsOrMakeAs(relationshipLabel:String, makeTargetLabel:String, makeTargetKey:String?, keys:List<String>?, properties:Map<String,Any>?): T {
-        r(direction= SelectDirection.RIGHT, label=relationshipLabel, keys=keys, properties=properties).n().firstAs<T>() ?.let{
-            return it
-        }
-        context.make<T>(makeTargetLabel, makeTargetKey ?: autoKey()).let {
-            it.mergeMe()
-            this.relate(relationshipLabel, it)
-            return it
+    fun autoTarget() {
+        autoCreateTargets.forEach {
+            it.get().createIfMissing()
         }
     }
 
+    fun <T:Node>cachedTarget(rLabel: RelationshipLabel, nLabel: NodeLabel<T>) =
+        CachedTarget(this, rLabel, nLabel)
 
-    fun relate(relationshipLabel: String, targetKey:String, properties: Map<String, Any?> = mapOf()) {
-        Relationship(
-            relationshipLabel=relationshipLabel,
-            source_key = key, target_key = targetKey, properties = properties, context = context,
-        ).createMe()
+    fun r(
+        label:RelationshipLabel,
+        keys:List<String>?=null,
+        properties:Map<String,Any>?=null,
+        direction: SelectDirection = SelectDirection.RIGHT,
+    ): SelectRelationships =
+        selectSelf.r(
+            label,
+            keys,
+            properties,
+            direction
+        )
+
+    fun <T:Node>targets(
+        rLabel:RelationshipLabel, // TODO: add default label
+        nLabel:NodeLabel<T>,
+    ): T? = r(
+        rLabel,
+        direction = SelectDirection.RIGHT
+    ).n(nLabel).first
+
+    fun <T:Node>targetsOrMake(
+        rLabel:RelationshipLabel, // TODO: add default label
+        nLabel:NodeLabel<T>,
+        targetKey: String = autoKey()
+    ): T {
+        targets(rLabel, nLabel)?.let { return it }
+        return nLabel.merge(targetKey).also { this.relate(rLabel, it) }
     }
 
-    fun relate(relationshipLabel: String, targetNode:LanguageNode, properties: Map<String, Any?> = mapOf()) {
-        // TODO: implement relate
-        relate(relationshipLabel, targetNode.key, properties)
-    }
+    // TODO: maybe implement this...?
+//    fun invoke()
+
+    fun relate(
+        rLabel:RelationshipLabel, // TODO: add default label
+        targetKey:String,
+    ) = rLabel.create(key, targetKey)
+
+    fun relate(
+        rLabel:RelationshipLabel, // TODO: add default label
+        targetNode:Node,
+    ) = rLabel.create(key, targetNode.key)
 
 }
 
 // ===========================================================================================================
 
+// just for fiddling around purposes...
+open class SpecialNode(
+    key:String = autoKey(),
+): Node(key) {
+    companion object : NodeCompanion<SpecialNode>(Node.childLabel { k -> SpecialNode(k) })
+    override val label: NodeLabel<out SpecialNode> = SpecialNode.label
+}
+
+// ===========================================================================================================
+
+open class RelationshipCompanion {
+    val TARGETS = RelationshipLabel("TARGETS")
+}
+
 open class Relationship(
     key:String = autoKey(),
-    var source_key: String?, // TODO: this is wonky... really, key string should be required
-    var target_key: String?, // ditto
-    properties: Map<String, Any?> = mapOf(),
-    context:ContextInterface = LocalContext,
-    relationshipLabel: String = "RELATES_TO"
-): LanguageRelationship, Item(key, properties, context) {
+    override val label: RelationshipLabel,
+    var sourceKey: String,
+    var targetKey: String,
+): LanguageRelationship, Item(key) {
+    companion object : RelationshipCompanion()
 
-    // TODO: elvis operator defaulting to empty string is wonky here... should just always have the key
+    // TODO maybe: elvis operator defaulting to empty string is wonky here... should just always have the key
     // and TODO maybe: should these be read upfront when initialized?
-    override val source: Node by lazy { Node(source_key ?: "") }
-    override val target: Node by lazy { Node(target_key ?: "") }
-
-    override val label = LocalContext.getLabel(relationshipLabel) { k, p, c -> Relationship(k, null, null, p, c) }
+    override val source: Node by lazy { Node(sourceKey ?: "") }
+    override val target: Node by lazy { Node(targetKey ?: "") }
 
 }
 
-fun relate(sourceKey:String, relationshipLabel:String, targetKey:String,
-           properties: Map<String, Any?> = mapOf(), context:ContextInterface = LocalContext) {
-    Relationship(
-        relationshipLabel=relationshipLabel,
-        source_key = sourceKey, target_key = targetKey, properties = properties, context = context,
-    ).createMe()
-}
+fun relate(
+    sourceKey: String,
+    rLabel:RelationshipLabel, // TODO: add default label
+    targetKey:String,
+) = rLabel.create(sourceKey, targetKey)
 
-fun relate(sourceKey:String, labelsToKeys:Map<String, String>, context:ContextInterface = LocalContext) {
-    labelsToKeys.forEach { (label, key) ->
-        relate(sourceKey, label, key, context=context)
+
+// TODO: would this be used?
+//fun relate(sourceKey:String, labelsToKeys:Map<RelationshipLabel, String>, context:ContextInterface = LocalContext) {
+//    labelsToKeys.forEach { (label, key) ->
+//        relate(sourceKey, label, key)
+//    }
+//}
+
+// TODO: move somewhere else
+class CachedTarget<T:Node>(
+    val sourceNode:Node,
+    val rLabel: RelationshipLabel,
+    val nLabel: NodeLabel<T>,
+) {
+    val rQuery = sourceNode.r(rLabel)
+    val query = rQuery.n(nLabel)
+    private var _cachedValue:T? = query.first
+
+    var target: T? get() {
+        _cachedValue?.let { return it }
+        _cachedValue = query.first
+        return _cachedValue
     }
+        set(value) {
+            _cachedValue = value
+            rQuery.first?.delete()
+            value?.let { sourceNode.relate(rLabel, it) }
+        }
+
+    fun createIfMissing() {
+        if (_cachedValue==null) {
+            _cachedValue = nLabel.create().also { sourceNode.relate(rLabel, it) }
+        }
+    }
+
 }
-
-
-
 

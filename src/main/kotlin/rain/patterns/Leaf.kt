@@ -9,9 +9,9 @@ open class Leaf(
     key:String = rain.utils.autoKey(),
     properties: Map<String, Any?> = mapOf(),
     context: ContextInterface = LocalContext,
-): Pattern, Node(key, properties, context) {
+): Tree(key, properties, context) {
 
-    override val label = LocalContext.getLabel( "Leaf", "CellPattern", "Pattern") { k, p, c -> Leaf(k, p, c) }
+    override val label = LocalContext.getLabel( "Leaf", "Tree", "CellPattern", "Pattern") { k, p, c -> Leaf(k, p, c) }
 
     // TODO: implement the below
 //    # TODO: assume this doesn't need to be serialized?

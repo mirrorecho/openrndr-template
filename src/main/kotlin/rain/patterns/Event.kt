@@ -3,9 +3,6 @@ package rain.patterns
 import org.openrndr.animatable.easing.Easing
 import rain.interfaces.*
 import rain.language.*
-import rain.machines.*
-import rain.rndr.RndrMachine
-import rain.rndr.Value
 import rain.utils.*
 import kotlin.math.absoluteValue
 
@@ -49,7 +46,7 @@ open class Event(
     override var dur: Double? by this.properties
     override var simultaneous: Boolean by this.properties.apply { putIfAbsent("simultaneous", false) }
 
-    open val triggersLabel: LabelInterface? get() = machine?.let { context[it] }
+    open val triggersLabel: _LabelInterface? get() = machine?.let { context[it] }
 
     fun relateMachine() {
         machineKey.let {mk->
@@ -83,6 +80,7 @@ open class Event(
 
 // =================================================================================================================
 
+// TODO: is this even used anywhere?
 class ValueEvent(
     key:String = autoKey(),
     properties: Map<String, Any?> = mapOf(),

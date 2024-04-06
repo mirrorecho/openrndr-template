@@ -1,38 +1,33 @@
 package rain.interfaces
 
-import org.openrndr.Program
 import rain.language.FancyProperty
-import rain.language.Label
 import rain.language.Relationship
 
 interface ContextInterface {
     val graph: GraphInterface
 
-
     // note, with Kotlin generics and class values, no need for initEmptyGraph and such nonsense
     // as in python implementation
 
-    fun registerLabel(label:LabelInterface)
-
-    operator fun get(labelName:String): LabelInterface?
-
-    fun <T: LanguageItem>make(labelName:String, key:String, properties: Map<String, Any?> = mapOf(), context: ContextInterface=this): T
-
-    fun <T: LanguageItem>make(fromItem:GraphableItem): T {
-        return this.make(fromItem.primaryLabel, fromItem.key, fromItem.properties, this)
-    }
-
-    // TODO: this is odd, esp. since generic type is just LanguageItem (not a type of relationship)
-    fun <T: LanguageItem>makeRelationship(labelName:String, key:String, source_key:String, target_key:String, properties: Map<String, Any?> = mapOf(), context: ContextInterface=this): T {
-        val myRelationship = this.make(labelName, key, properties, context) as Relationship
-        myRelationship.source_key = source_key
-        myRelationship.target_key = target_key
-        return myRelationship as T
-    }
-
-    fun <T: LanguageItem>makeRelationship(fromItem:GraphableRelationship): T {
-        return this.makeRelationship(fromItem.primaryLabel, fromItem.key, fromItem.source.key, fromItem.target.key, fromItem.properties)
-    }
+//    fun <T: LanguageItem>make(
+//        labelName:String, key:String, properties: Map<String, Any?> = mapOf(), context: ContextInterface=this
+//    ): T
+//
+//    fun <T: LanguageItem>make(fromItem:GraphableItem): T {
+//        return this.make(fromItem.primaryLabel, fromItem.key, fromItem.properties, this)
+//    }
+//
+//    // TODO: this is odd, esp. since generic type is just LanguageItem (not a type of relationship)
+//    fun <T: LanguageItem>makeRelationship(labelName:String, key:String, source_key:String, target_key:String, properties: Map<String, Any?> = mapOf(), context: ContextInterface=this): T {
+//        val myRelationship = this.make(labelName, key, properties, context) as Relationship
+//        myRelationship.source_key = source_key
+//        myRelationship.target_key = target_key
+//        return myRelationship as T
+//    }
+//
+//    fun <T: LanguageRelationship>makeRelationship(fromItem:GraphableRelationship): T {
+//        return this.makeRelationship(fromItem.primaryLabel, fromItem.key, fromItem.source.key, fromItem.target.key, fromItem.properties)
+//    }
 
     // Fancy Property interface
     fun setFancyProperty(fancyProperty: FancyProperty<*>)

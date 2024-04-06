@@ -1,8 +1,5 @@
 package rain.patterns
 
-import org.openrndr.animatable.easing.Easing
-import rain.utils.cycleOf
-
 //class Vein(
 //    val cell: Cell,
 //    val name:String,

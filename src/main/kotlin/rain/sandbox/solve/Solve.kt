@@ -1,11 +1,7 @@
 package rain.sandbox.solve
 
-import rain.language.*
-import rain.patterns.*
-import rain.rndr.*
-
 fun main()  {
-    solve5()
+//    solve6()
 }
 
 // TODO: SOLVE THE FOLLOWING:

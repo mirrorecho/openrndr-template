@@ -4,14 +4,14 @@ import rain.interfaces.*
 import rain.language.*
 import rain.utils.autoKey
 
-
 open class Tree(
-    key:String = rain.utils.autoKey(),
+    key:String = autoKey(),
     properties: Map<String, Any?> = mapOf(),
     context: ContextInterface = LocalContext,
 ): Pattern, Node(key, properties, context) {
 
     override val label = LocalContext.getLabel("Tree", "Pattern") { k, p, c -> Tree(k, p, c) }
+
 
     override val isAlter = false
 
@@ -19,11 +19,11 @@ open class Tree(
 
     // TODO: make these by lazy
 
-    override val branches: SelectInterface get() = TreeBranchesSelect(context, this)
+    override val branches: TreeSelect<T> get() = TreeBranchesSelect(context, this)
 
-    override val nodes: SelectInterface get() = TreeNodesSelect(context, this)
+    override val nodes: TreeSelect<Tree> get() = TreeNodesSelect(context, this)
 
-    override val leaves: SelectInterface get() = TreeLeavesSelect(context, this)
+    override val leaves: TreeSelect<Leaf> get() = TreeLeavesSelect(context, this)
 
     override var cuePath: CuePath? = null
 
@@ -31,6 +31,7 @@ open class Tree(
 //    override var cachedParentage = listOf<Tree>()
 
     val isEmpty: Boolean get() = r(SelectDirection.RIGHT, "CUES_FIRST").first == null
+
 
     fun extend(vararg patterns: Pattern) {
 
@@ -81,7 +82,7 @@ open class EventTree(
     override var simultaneous: Boolean by this.properties.apply { putIfAbsent("simultaneous", false) }
 
     override val dur: Double get() =
-        branches.asTypedSequence<EventPattern>().map { dur }.run {
+        branches.asSequence().map { dur }.run {
             if (simultaneous) { max() } else { sum() }
         }
 

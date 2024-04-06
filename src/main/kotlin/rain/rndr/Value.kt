@@ -1,12 +1,10 @@
 package rain.rndr
 
 import org.openrndr.animatable.Animatable
-import rain.interfaces.ContextInterface
-import rain.language.LocalContext
-import rain.patterns.CellBuilder
-import rain.patterns.Event
-import rain.patterns.ValueEvent
-import rain.utils.autoKey
+import rain.interfaces.*
+import rain.language.*
+import rain.patterns.*
+import rain.utils.*
 import kotlin.math.absoluteValue
 
 class AnimationValue(
@@ -15,11 +13,9 @@ class AnimationValue(
 
 open class Value(
     key:String = autoKey(),
-    properties: Map<String, Any?> = mapOf(),
-    context: ContextInterface = LocalContext,
-    ):RndrMachine<CellBuilder>(key, properties, context) {
-
-    override val label = LocalContext.getLabel("RndrMachine", "Machine", "Leaf") { k, p, c -> Value(k, p, c) }
+    ):RndrMachine(key) {
+    companion object : NodeCompanion<Value>(RndrMachine.childLabel { k -> Value(k) })
+    override val label: NodeLabel<out Value> = Value.label
 
     var animationValue = AnimationValue(0.0)
 

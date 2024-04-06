@@ -9,11 +9,9 @@ import rain.utils.*
 
 open class Color(
     key:String = autoKey(),
-    properties: Map<String, Any?> = mapOf(),
-    context: ContextInterface = LocalContext,
-):RndrMachine<CellBuilder>(key, properties, context) {
-
-    override val label = LocalContext.getLabel("ColorMachine", "RndrMachine", "Machine", "Leaf") { k, p, c -> Color(k, p, c) }
+):RndrMachine(key) {
+    companion object : NodeCompanion<Color>(RndrMachine.childLabel { k -> Color(k) })
+    override val label: NodeLabel<out Color> = Color.label
 
     val h: Value = targetMachine("H", "h_key")
     val s: Value = targetMachine("S", "s_key")

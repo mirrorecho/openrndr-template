@@ -6,45 +6,39 @@ import rain.interfaces.*
 import rain.language.*
 import  rain.machines.*
 import rain.patterns.*
+import kotlin.reflect.KMutableProperty0
 
 open class Circle(
     key:String = autoKey(),
-    properties: Map<String, Any?> = mapOf(),
-    context: ContextInterface = LocalContext,
-    ):RndrMachine<CircleCellBuilder>(key, properties, context) {
+    ):RndrMachine(key) {
+    companion object : NodeCompanion<Circle>(RndrMachine.childLabel { k -> Circle(k) })
+    override val label: NodeLabel<out Circle> = Circle.label
 
-    override val label = LocalContext.getLabel("Circle", "RndrMachine", "Machine", "Leaf") { k, p, c -> Circle(k, p, c) }
+    var radius = cachedTarget(Relationship.rndr.RADIUS, Value.label)
+    var strokeWeight = cachedTarget(Relationship.rndr.STROKE_WEIGHT, Value.label)
+    var strokeColor = cachedTarget(Relationship.rndr.STROKE_COLOR, Color.label)
+//    val fillColor: Color = targetMachine("FILL_COLOR", "fillColorKey")
+//    val position: Position = targetMachine("POSITION", "positionKey")
 
-    val radius = targetMachine<Value>("RADIUS", "radiusKey")
-    val strokeWeight = targetMachine<Value>("STROKE_WEIGHT", "strokeWeightKey")
-    val strokeColor = targetMachine<Color>("STROKE_COLOR", "strokeColorKey")
-    val fillColor = targetMachine<Color>("FILL_COLOR", "fillColorKey")
-    val position = targetMachine<Position>("POSITION", "positionKey")
-
-    // TODO: implement if needed (or remove)
-    override fun trigger(event:Event) {
-        // TODO: implement
-        super.trigger(event)
-    }
-
-    fun render(score: Score, program: Program) {
-//        println("circle with x position " + position.x.value.toString())
-        program.apply {
-            drawer.fill = fillColor?.colorRGBa()
-            drawer.stroke = strokeColor?.colorRGBa()
-            strokeWeight?.apply { drawer.strokeWeight = value }
-            drawer.circle(
-                position.vector(program),
-                radius.value,
-            )
-        }
-    }
-}
+    override val autoCreateTargets = listOf(::radius, ::strokeWeight, ::strokeColor)
 
 
+//    // TODO: implement if needed (or remove)
+//    override fun trigger(event:Event) {
+//        // TODO: implement
+//        super.trigger(event)
+//    }
 
-class CircleCellBuilder(cell:Cell):CellBuilder(cell) {
-    fun radius() {
-
-    }
+//    fun render(program: Program) {
+////        println("circle with x position " + position.x.value.toString())
+//        program.apply {
+//            drawer.fill = fillColor.target?.colorRGBa()
+//            drawer.stroke = strokeColor.target?.colorRGBa()
+//            strokeWeight.target?.apply { drawer.strokeWeight = value }
+//            drawer.circle(
+//                position.vector(program),
+//                radius.value,
+//            )
+//        }
+//    }
 }

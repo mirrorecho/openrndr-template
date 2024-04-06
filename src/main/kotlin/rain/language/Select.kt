@@ -1,82 +1,113 @@
 package rain.language
 
 import rain.interfaces.*
-import rain.utils.cycle
-
-fun <T: Node> SelectInterface.toPalette(): Palette<T> = Palette.fromSelect(this)
 
 // TODO: maybe use generic type parameters
-open class Select(
-    override val context:ContextInterface = LocalContext,
-    override val label: String? = null,
+open class SelectNodes<T:Node>(
+    override val label: NodeLabel<out T>,
     override val keys: List<String>? = null,
     override val properties: Map<String, Any?>? = null,
-    override val selectFrom: SelectInterface? = null,
     override val direction: SelectDirection? = null,
-):SelectInterface {
+    override val selectFrom: SelectInterface<*>? = null,
+    ):SelectInterface<T> {
 
-    override fun get(key:String) {throw NotImplementedError()}
 
     // TODO: yay, caching! Make use of this!
-    override val cachedItems: List<LanguageItem> by lazy { asSequence().toList() }
+    override val cachedItems: List<T> by lazy { asSequence().toList() }
 
-    override operator fun invoke(label:String?, keys:List<String>?, properties:Map<String,Any>?): Select {
-        // TODO: should direction be set to this.direction? (warrants more thought and testing)
-        return Select(context=this.context, label=label, keys=keys, properties=properties, selectFrom=this)
+    private var _cachedFirst: T? = null
+
+    var cachedFirst: T? get() {
+        _cachedFirst?.let { return it }
+        _cachedFirst = first
+        return _cachedFirst
+    }
+        set(value) {
+            _cachedFirst = value
+        }
+
+    override fun asSequence(): Sequence<T> = sequence {
+        yieldAll(this@SelectNodes.graph.selectNodes(this@SelectNodes))
     }
 
-    override fun r(direction:SelectDirection, label:String?, keys:List<String>?, properties:Map<String,Any>?):TargetedRelationshipSelect{
-        return TargetedRelationshipSelect(context=this.context, label=label, keys=keys, properties=properties, selectFrom=this, direction=direction)
-    }
+    // TODO: bring this back if it seems useful
+//    operator fun invoke(keys:List<String>?, properties:Map<String,Any>?): SelectNodes<T> {
+//        // TODO: should direction be set to this.direction? (warrants more thought and testing)
+//        return SelectNodes(context=this.context, label=label, keys=keys, properties=properties, selectFrom=this)
+//    }
 
+    open fun r(
+        label: RelationshipLabel,
+        keys: List<String>? = null,
+        properties: Map<String, Any>? = null,
+        direction: SelectDirection = SelectDirection.RIGHT,
+    ): SelectRelationships {
+        return SelectRelationships(
+            label,
+            keys,
+            properties,
+            direction,
+            this,
+        )
+    }
 }
 
 // ===========================================================================================================
 
-class TargetedRelationshipSelect(
-    context:ContextInterface = LocalContext,
-    label: String? = null,
-    keys: List<String>? = null,
-    properties: Map<String, Any?>? = null,
-    selectFrom: SelectInterface? = null,
-    direction: SelectDirection? = null,
-):Select(context, label, keys, properties, selectFrom, direction) {
-    // TODO: document
-    // TODO: consider testing for supported directions (-> and <- only)
+open class SelectRelationships(
+    override val label: RelationshipLabel,
+    override val keys: List<String>? = null,
+    override val properties: Map<String, Any?>? = null,
+    override val direction: SelectDirection? = null,
+    override val selectFrom: SelectInterface<*>? = null,
+):SelectInterface<Relationship> {
 
-    override fun r(direction:SelectDirection, label:String?, keys:List<String>?, properties:Map<String,Any>?):TargetedRelationshipSelect {
-        throw NotImplementedError("Chaining .r relationship selects not supported (add a .n select between)")
+    // TODO: yay, caching! Make use of this!
+    override val cachedItems: List<Relationship> by lazy { asSequence().toList() }
+
+    override fun asSequence(): Sequence<Relationship> = sequence {
+        yieldAll(this@SelectRelationships.graph.selectRelationships(this@SelectRelationships ))
     }
 
-    override fun n(label:String?, keys:List<String>?, properties:Map<String,Any>?):Select {
-        return Select(context=this.context, label=label, keys=keys, properties=properties, selectFrom=this,
-            direction = when (this.direction) {
+    fun <NT:Node>n(
+        label:NodeLabel<NT>,
+        keys:List<String>?=null,
+        properties:Map<String,Any>?=null
+    ):SelectNodes<NT> {
+        return SelectNodes(
+            label,
+            keys,
+            properties,
+            when (this.direction) {
                 SelectDirection.RIGHT -> SelectDirection.RIGHT_NODE
                 SelectDirection.LEFT -> SelectDirection.LEFT_NODE
                 else -> null
-            })
+            },
+            this,
+        )
     }
 
 }
 
 // ===========================================================================================================
 
-open class SelfSelect(
-    context:ContextInterface,
-    private val selfItem: LanguageItem,
+open class SelectSelf(
+    private val node:Node,
     // TODO maybe: also pass Label into Select constructor? (what performs better?)
-):Select(context = context, keys = listOf(selfItem.key)) {
+):SelectNodes<Node>(
+    node.label,
+    listOf(node.key)
+) {
 
-    override fun asSequence() = sequence { yield(this@SelfSelect.selfItem) }
+    override fun asSequence() = sequence { yield(this@SelectSelf.node) }
 
 }
 
 // ===========================================================================================================
 
-open class EmptySelect(
-    context:ContextInterface,
-):Select(context = context) {
-    override fun asSequence(): Sequence<LanguageItem> = sequenceOf()
+open class SelectEmpty(
+):SelectNodes<Node>(Node.label) {
+    override fun asSequence(): Sequence<Node> = sequenceOf()
 
 }
 
