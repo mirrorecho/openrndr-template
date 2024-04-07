@@ -23,6 +23,10 @@ open class NodeCompanion<T:Node>(val label: NodeLabel<T> ) {
 
     fun create(key:String = autoKey(), block:( T.()->Unit )?=null ):T = label.create(key, block)
 
+    fun select(
+        keys:List<String>?=null,
+        properties:Map<String,Any>?=null,
+    ) = label.select(keys, properties)
 
     // TODO: implement
 //    fun select(
@@ -72,7 +76,14 @@ class NodeLabel<T:Node>(
     override val allNames: List<String> = listOf(name) + parentNames
 
     override var context: ContextInterface = LocalContext
+
+    fun select(
+        keys:List<String>?=null,
+        properties:Map<String,Any>?=null,
+    ) = SelectNodes(this, keys, properties)
+
 }
+
 
 class RelationshipLabel(
     override val name:String
@@ -84,5 +95,11 @@ class RelationshipLabel(
     override fun factory(sourceKey:String, targetKey:String, key:String): Relationship {
         return Relationship(key, this, sourceKey, targetKey)
     }
+
+    fun select(
+        keys:List<String>?=null,
+        properties:Map<String,Any>?=null,
+        direction: SelectDirection? = SelectDirection.RIGHT,
+    ) = SelectRelationships(this, keys, properties, direction)
 
 }

@@ -1,216 +1,254 @@
 package rain.graph
 
 import rain.interfaces.*
+import kotlin.Exception
 
 class Graph: GraphInterface {
-    // TODO: rename to keyIndex
-    private val data: MutableMap<String, GraphItem> = mutableMapOf()
-    // TODO maybe ... implement nodes and relationships as separate maps?
-    // that way could handle getting either by key without downcasting
+    // TODO: make private after debugging:
+    val graphNodes: MutableMap<String, GraphNode> = mutableMapOf()
+    val graphRelationships: MutableMap<String, GraphRelationship> = mutableMapOf()
 
-    // TODO: labelIndex would be a better name
-    private val typeIndex: MutableMap<String, MutableMap<String, GraphItem>> = mutableMapOf()
+    private val nodeLabelIndex: MutableMap<String, MutableMap<String, GraphNode>> = mutableMapOf()
+    private val relationshipLabelIndex: MutableMap<String, MutableMap<String, GraphRelationship>> = mutableMapOf()
 
+    override fun contains(key:String) = key in graphNodes || key in graphRelationships
 
-    override fun contains(key: String): Boolean = this.data.contains(key)
+    override fun contains(node: GraphableNode) = node.key in graphNodes
+    override fun contains(relationship: GraphableRelationship) = relationship.key in graphRelationships
 
-    override fun contains(item:GraphableItem): Boolean = this.data.contains(item.key)
+    // =================================================================================
 
-    // NOTE: dunder method in python
-//    private fun getItem(key: String): GraphableItem? = this.data[key]
-
-    private fun getNode(key: String): GraphNode {
-        return this.data[key] as GraphNode // downcast and null safe bypass reasonable here?
+    private fun addLabelIndex(label: String, graphNode: GraphNode) {
+        nodeLabelIndex.getOrPut(label) { mutableMapOf() }[graphNode.key] = graphNode
     }
 
-    private fun getRelationship(key: String): GraphRelationship {
-        return this.data[key] as GraphRelationship // ditto, downcast and null safe bypass reasonable here?
-    }
-
-    // TODO: combine with something that returns the items to avoid redundant lookups, such as checkItem below
-    // TODO: also, make private?
-    internal fun checkKey(key:String, exists:Boolean = true) {
-        if (this.data.contains(key) != exists)
-            throw Exception(key + if (exists) "does not exist!" else " already exists!")
-    }
-
-//    internal fun checkItem(key:String, exists:Boolean = true): GraphableItem {
-//        if (this.data.contains(key) != exists)
-//            throw Exception(key + if (exists) "does not exist!" else " already exists!")
-//    }
-
-    private fun addLabelIndex(label:String, graphItem: GraphItem) {
-        this.typeIndex.getOrPut(label) { mutableMapOf() } [graphItem.key] = graphItem
-    }
-
-    internal fun discardLabelIndex(label:String, graphItem: GraphItem) {
-        this.typeIndex[label]?.remove(graphItem.key)
+    private fun addLabelIndex(label: String, graphRelationship: GraphRelationship) {
+        relationshipLabelIndex.getOrPut(label) { mutableMapOf() }[graphRelationship.key] = graphRelationship
     }
 
     // =================================================================================
 
-    private fun createGraphNode(key:String, labels:List<String> = listOf(), properties: Map<String, Any?> = mapOf()) {
-        var node = GraphNode(key, labels, properties)
-        this.data[key] = node
-        labels.forEach { this.addLabelIndex(it, node) }
+    internal fun discardLabelIndex(label: String, graphNode: GraphNode) {
+        nodeLabelIndex[label]?.remove(graphNode.key)
     }
 
-    private fun createGraphRelationship(key:String, relationshipType:String,
-                                        sourceKey:String, targetKey:String, properties: Map<String, Any?> = mapOf()) {
-        this.checkKey(sourceKey)
-        this.checkKey(targetKey)
-
-        var source = this.getNode(sourceKey)
-        var target = this.getNode(targetKey)
-
-        var relationship = GraphRelationship(key, relationshipType,
-            source, target, properties)
-
-        this.data[key] = relationship
-        source.sourcesFor[relationship] = target
-        target.targetsFor[relationship] = source
-        this.addLabelIndex(relationshipType, relationship)
+    internal fun discardLabelIndex(label: String, graphRelationship: GraphRelationship) {
+        relationshipLabelIndex[label]?.remove(graphRelationship.key)
     }
 
-// seems unnecessary
-//    fun getProperties(key:String): MutableMap<String, Any>? = this.data[key]?.properties
+    // =================================================================================
 
-    override fun create(item:GraphableItem) {
-        this.checkKey(item.key, false)
-        when (item) {
-            is GraphableNode -> this.createGraphNode(item.key, item.labels, item.properties)
-            is GraphableRelationship -> this.createGraphRelationship(item.key, item.primaryLabel, item.source.key, item.target.key, item.properties)
-        }
-    }
-
-    override fun merge(item:GraphableItem) {
-//        this.data[item.key]?.let {} else
-
-        // TODO: refactor to avoid multiple lookups
-
-
-        if (this.contains(item.key)) {
-            // note, not calling save here to avoid checking for key twice
-            this.data[item.key]?.properties?.putAll(item.properties)
-        } else {
-            // ditto
-            // but TODO, could by DRYer here, rather than replicating create logic...
-            // ... think about "safe" methods that check for keys, vs unsafe that don't
-            when (item) {
-                is GraphableNode -> this.createGraphNode(item.key, item.labels, item.properties)
-                is GraphableRelationship -> this.createGraphRelationship(item.key, item.primaryLabel, item.source.key, item.target.key, item.properties)
+    override fun create(node: GraphableNode) {
+        graphNodes.putIfAbsent(node.key,
+            GraphNode(node.key, node.labels, node.properties).also {
+                node.labels.forEach { label -> addLabelIndex(label, it) }
             }
+        )?.let {
+            throw Exception("Node ${node.key} already exists in graph. So it can not be created.")
         }
     }
 
-    override fun read(item: GraphableItem) {
-        this.checkKey(item.key) // TODO note this duplicates key checking
-        this.data[item.key]?.let { item.updatePropertiesFrom(it.properties) }
+    override fun create(relationship: GraphableRelationship) {
+        graphNodes[relationship.source.key]?.let { source ->
+            graphNodes[relationship.target.key]?.let { target ->
+
+                graphRelationships.putIfAbsent(relationship.key,
+                    GraphRelationship(
+                        relationship.key,
+                        relationship.primaryLabel,
+                        source,
+                        target,
+                        relationship.properties
+                    ).also {
+                        source.sourcesFor[it] = target
+                        target.sourcesFor[it] = source
+                        addLabelIndex(it.primaryLabel, it)
+                    }
+                )?.let {
+                    throw Exception("Relationship ${relationship.key} already exists in graph. So it can not be created.")
+                }
+                return // OK!
+            }
+            throw Exception("Target ${relationship.target.key} not found in graph. Relationship not created.")
+        }
+        throw Exception("Source ${relationship.source.key} not found in graph. Relationship not created.")
     }
 
-// TODO: needed????
-    // NOTE: original python implementation named this get_relationship
-//    fun readRelationship(item: GraphableRelationship) {
-//        // TODO this takes multiple lookups... not cool
-//        this.read(item)
-//        var relationship = this.getRelationship(item.key)
-//        var source = relationship.source
-//        var target = relationship.target
-//        item.setSource(source.primaryLabel, source.key)
-//        item.setTarget(target.primaryLabel, target.key)
-//    }
+    // =================================================================================
 
-    override fun save(item: GraphableItem) {
-        this.checkKey(item.key)
-        this.data[item.key]?.updatePropertiesFrom(item.properties)
+    override fun merge(node: GraphableNode) {
+        graphNodes[node.key]?.let { it.updatePropertiesFrom(node); return }
+        create(node)
     }
 
-    override fun delete(key:String) {
-        this.data[key]?.cleanup(this)
-        this.data.remove(key)
+    override fun merge(relationship: GraphableRelationship) {
+        graphRelationships[relationship.key]?.let { it.updatePropertiesFrom(relationship); return }
+        create(relationship)
     }
+
+    // =================================================================================
+
+    override fun read(node: GraphableNode) {
+        graphNodes[node.key]?.let { node.updatePropertiesFrom(it); return }
+        throw Exception("Node ${node.key} not found in graph; could not be read.")
+    }
+
+    override fun read(relationship: GraphableRelationship) {
+        graphRelationships[relationship.key]?.let { relationship.updatePropertiesFrom(it); return }
+        throw Exception("Relationship ${relationship.key} not found in graph; could not be read.")
+    }
+
+    // =================================================================================
+
+    override fun save(node: GraphableNode) {
+        graphNodes[node.key]?.let { it.updatePropertiesFrom(node); return }
+        throw Exception("Node ${node.key} not found in graph; could not save.")
+    }
+
+    override fun save(relationship: GraphableRelationship) {
+        graphRelationships[relationship.key]?.let { it.updatePropertiesFrom(relationship); return }
+        throw Exception("Relationship ${relationship.key} not found in graph; could not save.")
+    }
+
+    // =================================================================================
+
+    override fun deleteNode(key: String) {
+        this.graphNodes[key]?.cleanup(this)
+        this.graphNodes.remove(key)
+    }
+
+    override fun deleteRelationship(key: String) {
+        this.graphRelationships[key]?.cleanup(this)
+        this.graphRelationships.remove(key)
+    }
+
+    // =================================================================================
 
     fun clear() {
-        this.data.clear()
-        // TODO maybe - also clear typeIndex?
+        graphNodes.clear()
+        graphRelationships.clear()
+        nodeLabelIndex.clear()
+        relationshipLabelIndex.clear()
     }
 
-    val size: Int get() = this.data.size
+    val nodeSize get() = graphNodes.size
+    val relationshipSize get() = graphRelationships.size
 
+    val size get() = nodeSize + relationshipSize
 
-    override fun <T: LanguageNode>selectNodes(select: SelectInterface<T>):Sequence<T> = sequence {
-        selectLocalNodes(select).forEach {
-            yield( select.label.makeFrom(it) )
+    // =================================================================================
+    // =================================================================================
+
+    override fun <T : LanguageNode>selectNodes(select: SelectNodeInterface<T>): Sequence<T> = sequence {
+        selectGraphNodes(select).forEach {
+            yield(select.label.from(it))
         }
     }
 
-    override fun <T: LanguageRelationship>selectRelationships(select: SelectInterface<T>):Sequence<T> = sequence {
-        selectLocalRelationships(select).forEach {
-            yield( select.label.makeFrom(it) )
+    override fun <T : LanguageRelationship>selectRelationships(select: SelectRelationshipInterface<T>): Sequence<T> = sequence {
+        selectGraphRelationships(select).forEach {
+            yield(select.label.from(it))
         }
     }
 
-    private fun selectLocalNodes(select:SelectInterface<*>):Sequence<GraphNode> {
-        var mySequence: Sequence<GraphNode>
-        select.selectFrom?.let {
-            mySequence = when (select.direction) {
+    // =================================================================================
 
+    // TODO: bring back label filters!!!!!!
+
+    private fun selectGraphNodes(select: SelectInterface<*>): Sequence<GraphNode> =
+        select.selectFrom?.let {sf ->
+            when (select.direction) {
+                SelectDirection.RIGHT_NODE -> selectGraphRelationships(sf).map { r -> r.target }
+                SelectDirection.LEFT_NODE -> selectGraphRelationships(sf).map { r -> r.source }
+                else -> selectGraphNodes(sf) // TODO: test this (should simply further filter the select
+            }.filterKeys(select.keys).filterNodeLabel(select.label)
+        } ?: run {
+            nodeLabelIndex[select.label.name].orEmpty().sequenceKeys(select.keys)
+        }.filterProperties( select.properties )
+
+
+    private fun selectGraphRelationships(select:SelectInterface<*>):Sequence<GraphRelationship> =
+        select.selectFrom?.let {sf ->
+            when (select.direction) {
                 SelectDirection.RIGHT -> sequence {
-                    selectLocalNodes(it).forEach { n->
-                        n.sourcesFor.forEach { yield(it.key) } } }
-                }
-            }
-        }
-    }
-
-    private fun selectLocalRelationships(select:SelectInterface<*>):Sequence<GraphRelationship> {
-        var mySequence: Sequence<GraphRelationship>
-
-    }
-
-    private fun selectLocalItems(select:SelectInterface<*>):Sequence<GraphItem> {
-        var mySequence: Sequence<GraphItem>
-
-        if (select.selectFrom != null) {
-            val fromSequence = selectLocalItems(select.selectFrom!!)
-            mySequence = when (select.direction) {
-
-                // TODO: refactor to deal with nods or relationships without having to cast
-
-                SelectDirection.RIGHT -> sequence {
-                    fromSequence.forEach { n ->
-                        (n as GraphNode).sourcesFor.forEach { yield(it.key) }
-                    }
+                    selectGraphNodes(sf).forEach { n -> n.sourcesFor.forEach { yield(it.key) } }
                 }
                 SelectDirection.LEFT ->  sequence {
-                    fromSequence.forEach { n ->
-                        (n as GraphNode).targetsFor.forEach { yield(it.key) }
-                    }
+                    selectGraphNodes(sf).forEach { n -> n.targetsFor.forEach { yield(it.key) } }
                 }
-                SelectDirection.RIGHT_NODE -> fromSequence.map { r -> (r as GraphRelationship).target }
-                SelectDirection.LEFT_NODE -> fromSequence.map { r -> (r as GraphRelationship).source }
-                else -> sequenceOf()
-            }
-            // WARNING: this implementation differs from the key select
-            // below for the original select ... it's purely a filter ... won't re-order or duplicate items
-            if (!select.keys.isNullOrEmpty()) mySequence = mySequence.filter { select.keys!!.contains(it.key) }
+                else -> selectGraphRelationships(sf) // TODO: test this (should simply further filter the select
+            }.filterKeys(select.keys).filterRelationshipLabel(select.label)
+        } ?: run {
+            relationshipLabelIndex[select.label.name].orEmpty().sequenceKeys(select.keys)
+        }.filterProperties( select.properties )
 
-            if (!select.label.isRoot) mySequence = mySequence.filter { it.labels.contains(select.label.name) }
 
-        } else {
-            val myMap = if (select.label.isRoot) data else typeIndex[select.label.name].orEmpty()
+//    private fun selectLocalItems(select:SelectInterface<*>):Sequence<GraphItem> {
+//        var mySequence: Sequence<GraphItem>
+//
+//        if (select.selectFrom != null) {
+//            val fromSequence = selectLocalItems(select.selectFrom!!)
+//            mySequence = when (select.direction) {
+//
+//                // TODO: refactor to deal with nods or relationships without having to cast
+//
+//                SelectDirection.RIGHT -> sequence {
+//                    fromSequence.forEach { n ->
+//                        (n as GraphNode).sourcesFor.forEach { yield(it.key) }
+//                    }
+//                }
+//                SelectDirection.LEFT ->  sequence {
+//                    fromSequence.forEach { n ->
+//                        (n as GraphNode).targetsFor.forEach { yield(it.key) }
+//                    }
+//                }
+//                SelectDirection.RIGHT_NODE -> fromSequence.map { r -> (r as GraphRelationship).target }
+//                SelectDirection.LEFT_NODE -> fromSequence.map { r -> (r as GraphRelationship).source }
+//                else -> sequenceOf()
+//            }
+//            // WARNING: this implementation differs from the key select
+//            // below for the original select ... it's purely a filter ... won't re-order or duplicate items
+//            mySequence = mySequence.filterKeys(select.keys)
+//
+//            if (!select.keys.isNullOrEmpty()) mySequence = mySequence.filter { select.keys!!.contains(it.key) }
+//
+//            if (!select.label.isRoot) mySequence = mySequence.filter { it.labels.contains(select.label.name) }
+//
+//        } else {
+//            val myMap = if (select.label.isRoot) data else typeIndex[select.label.name].orEmpty()
+//
+//            mySequence = if (!select.keys.isNullOrEmpty() )
+//                select.keys?.asSequence().orEmpty().mapNotNull { k-> myMap[k] }
+//            else
+//                myMap.asSequence().map {it. value }
+//        }
+//        if (!select.properties.isNullOrEmpty()) mySequence = mySequence.filter { it.anyPropertyMatches(select.properties!!) }
+//    return mySequence
+//    }
 
-            mySequence = if (!select.keys.isNullOrEmpty() )
-                select.keys?.asSequence().orEmpty().mapNotNull { k-> myMap[k] }
-            else
-                myMap.asSequence().map {it. value }
-        }
-        if (!select.properties.isNullOrEmpty()) mySequence = mySequence.filter { it.anyPropertyMatches(select.properties!!) }
-    return mySequence
-    }
+}
 
-    fun testMe(){
-//        this.selectItems()
-    }
+fun <T:GraphItem>Map<String, T>.sequenceKeys(keys:List<String>?=null):Sequence<T> {
+    keys?.let { ks-> return ks.asSequence().mapNotNull { k-> this[k] } }
+    return this.asSequence().map { it.value }
+}
 
+fun Sequence<GraphNode>.filterNodeLabel(label:LabelInterface<*>):Sequence<GraphNode> {
+    return if (label.isRoot) this
+    else this.filter { it.labels.contains(label.name) }
+}
+
+fun Sequence<GraphRelationship>.filterRelationshipLabel(label:LabelInterface<*>):Sequence<GraphRelationship> {
+    return if (label.isRoot) this
+    else this.filter { it.primaryLabel == label.name }
+}
+
+fun <T:GraphItem>Sequence<T>.filterKeys(keys:List<String>?=null):Sequence<T> {
+    keys?.let { ks-> return this.filter { ks.contains(it.key) } }
+    return this
+}
+
+fun <T:GraphItem>Sequence<T>.filterProperties(properties:Map<String, Any?>?=null):Sequence<T> {
+    properties?.let { ps-> return this.filter { it.anyPropertyMatches(ps) } }
+    return this
 }

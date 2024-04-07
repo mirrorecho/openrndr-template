@@ -2,14 +2,13 @@ package rain.language
 
 import rain.interfaces.*
 
-// TODO: maybe use generic type parameters
 open class SelectNodes<T:Node>(
     override val label: NodeLabel<out T>,
     override val keys: List<String>? = null,
     override val properties: Map<String, Any?>? = null,
     override val direction: SelectDirection? = null,
     override val selectFrom: SelectInterface<*>? = null,
-    ):SelectInterface<T> {
+    ):SelectNodeInterface<T> {
 
 
     // TODO: yay, caching! Make use of this!
@@ -30,7 +29,7 @@ open class SelectNodes<T:Node>(
         yieldAll(this@SelectNodes.graph.selectNodes(this@SelectNodes))
     }
 
-    // TODO: bring this back if it seems useful
+    // TODO maybe: bring this back if it seems useful
 //    operator fun invoke(keys:List<String>?, properties:Map<String,Any>?): SelectNodes<T> {
 //        // TODO: should direction be set to this.direction? (warrants more thought and testing)
 //        return SelectNodes(context=this.context, label=label, keys=keys, properties=properties, selectFrom=this)
@@ -60,7 +59,7 @@ open class SelectRelationships(
     override val properties: Map<String, Any?>? = null,
     override val direction: SelectDirection? = null,
     override val selectFrom: SelectInterface<*>? = null,
-):SelectInterface<Relationship> {
+):SelectRelationshipInterface<Relationship> {
 
     // TODO: yay, caching! Make use of this!
     override val cachedItems: List<Relationship> by lazy { asSequence().toList() }
@@ -91,24 +90,21 @@ open class SelectRelationships(
 
 // ===========================================================================================================
 
-open class SelectSelf(
-    private val node:Node,
-    // TODO maybe: also pass Label into Select constructor? (what performs better?)
+open class SelectSelf<T:Node>(
+    private val node:T,
 ):SelectNodes<Node>(
     node.label,
     listOf(node.key)
 ) {
-
     override fun asSequence() = sequence { yield(this@SelectSelf.node) }
-
 }
 
 // ===========================================================================================================
 
-open class SelectEmpty(
-):SelectNodes<Node>(Node.label) {
-    override fun asSequence(): Sequence<Node> = sequenceOf()
-
+open class SelectEmpty<T:Node>(
+    label: NodeLabel<out T>
+):SelectNodes<T>(label) {
+    override fun asSequence(): Sequence<T> = sequenceOf()
 }
 
 // ===========================================================================================================

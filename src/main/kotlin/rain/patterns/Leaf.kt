@@ -7,11 +7,9 @@ import rain.language.*
 // to this node, in a "pattern"
 open class Leaf(
     key:String = rain.utils.autoKey(),
-    properties: Map<String, Any?> = mapOf(),
-    context: ContextInterface = LocalContext,
-): Tree(key, properties, context) {
-
-    override val label = LocalContext.getLabel( "Leaf", "Tree", "CellPattern", "Pattern") { k, p, c -> Leaf(k, p, c) }
+): Tree(key) {
+    companion object : NodeCompanion<Leaf>(Tree.childLabel { k -> Leaf(k) })
+    override val label: NodeLabel<out Leaf> = Leaf.label
 
     // TODO: implement the below
 //    # TODO: assume this doesn't need to be serialized?
@@ -26,13 +24,13 @@ open class Leaf(
 
     override val isLeaf = true
 
-    override val branches = EmptySelect(context)
+    override val branches: TreeSelect<out Tree> get() = TreeSelectEmpty(Tree.label, this)
+
+    override val nodes: TreeSelect<out Tree> get() = TreeNodesSelect(Tree.label, this)
 
     // TODO: implement hook logic here
     // ... and may need to change to a TreeSelfSelect here (in order to get TreeSelectContext)
-    override val leaves get() = SelfSelect(context, this)
-
-    override val nodes get() = SelfSelect(context, this)
+    override val leaves: TreeSelect<out Leaf> get() = TreeLeavesSelect(Leaf.label, this)
 
     override var cuePath: CuePath? = null
 

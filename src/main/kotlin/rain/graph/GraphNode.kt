@@ -17,10 +17,10 @@ class GraphNode(
     override val primaryLabel = labels[0]
 
     override fun cleanup(graph: Graph) {
-        this.labels.forEach { graph.discardLabelIndex(it, this) }
+        labels.forEach { graph.discardLabelIndex(it, this) }
 
         // TODO better to use asSequence or asIterable?
-        this.sourcesFor.asIterable().forEach { graph.delete(it.key.key) }
-        this.targetsFor.asIterable().forEach { graph.delete(it.key.key) }
+        sourcesFor.asIterable().forEach { graph.deleteRelationship(it.key.key) }
+        targetsFor.asIterable().forEach { graph.deleteRelationship(it.key.key) }
     }
 }

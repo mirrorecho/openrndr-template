@@ -4,7 +4,7 @@ import rain.interfaces.*
 
 class GraphRelationship(
     override val key:String,
-    val relationshipType: String,
+    override val primaryLabel: String,
     override val source: GraphNode,
     override val target: GraphNode,
     properties: Map<String, Any?> = mapOf()
@@ -13,13 +13,11 @@ class GraphRelationship(
     override val properties: MutableMap<String, Any?> = properties.toMutableMap()
 
     // TODO: replace with label instance
-    override val labels get() = listOf(this.relationshipType)
-
-    override val primaryLabel = this.relationshipType
+    override val labels get() = listOf(primaryLabel)
 
     override fun cleanup(graph: Graph) {
-        graph.discardLabelIndex(this.relationshipType, this)
-        this.source.sourcesFor.remove(this)
-        this.target.targetsFor.remove(this)
+        graph.discardLabelIndex(primaryLabel, this)
+        source.sourcesFor.remove(this)
+        target.targetsFor.remove(this)
     }
 }

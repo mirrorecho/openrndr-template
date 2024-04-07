@@ -13,16 +13,18 @@ open class Color(
     companion object : NodeCompanion<Color>(RndrMachine.childLabel { k -> Color(k) })
     override val label: NodeLabel<out Color> = Color.label
 
-    val h: Value = targetMachine("H", "h_key")
-    val s: Value = targetMachine("S", "s_key")
-    val v: Value = targetMachine("V", "v_key")
-    val a: Value = targetMachine("A", "a_key")
+    val h = cachedTarget(Relationship.rndr.H, Value.label)
+    val s = cachedTarget(Relationship.rndr.S, Value.label)
+    val v = cachedTarget(Relationship.rndr.V, Value.label)
+    val a = cachedTarget(Relationship.rndr.A, Value.label)
+
+    override val targetProperties = listOf(::h, ::s, ::v, ::a)
 
     fun colorHSVa() = ColorHSVa(
-        h.value,
-        s.value,
-        v.value,
-        a.value,
+        h.target?.value ?: 90.0,
+        s.target?.value ?: 0.8,
+        v.target?.value ?: 0.8,
+        a.target?.value ?: 0.6,
     )
 
     fun colorRGBa(): ColorRGBa = colorHSVa().toRGBa()

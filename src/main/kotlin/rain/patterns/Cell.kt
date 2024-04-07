@@ -8,9 +8,9 @@ import rain.utils.autoKey
 
 open class Cell(
     key:String = autoKey(),
-    properties: Map<String, Any?> = mapOf(),
-    context: ContextInterface = LocalContext,
-): EventTree(key, properties, context) {
+): EventTree(key) {
+    companion object : NodeCompanion<Cell>(EventTree.childLabel { k -> Cell(k) })
+    override val label: NodeLabel<out Cell> = Cell.label
 
 //    class StreamHelper(
 //        val name:String,
@@ -23,8 +23,6 @@ open class Cell(
 //        }
 //    }
 
-    override val label = LocalContext.getLabel<Node>("Cell", "EventTree", "Tree", "EventPattern", "Pattern") { k, p, c -> Cell(k, p, c) }
-
     override var simultaneous: Boolean by this.properties.apply { putIfAbsent("simultaneous", false) }
 
     operator fun invoke(block:Cell.()->Unit): Cell {
@@ -33,6 +31,7 @@ open class Cell(
         return this
     }
 
+    // TODO: confirm this works!
     fun stream(name:String, vararg values: Any?) {
         val leavesIterator = this.leaves.asSequence().iterator()
         val valuesIterator = values.iterator()
@@ -41,7 +40,7 @@ open class Cell(
                 leavesIterator.next()[name] = valuesIterator.next()
             } else {
                 extend(
-                    Event(properties = mapOf(name to valuesIterator.next())).apply { createMe() }
+                    Event.create { this[name] = valuesIterator.next() }
                 )
             }
 
@@ -74,21 +73,3 @@ open class Cell(
 }
 
 // ===========================================================================================================
-
-// TODO maybe: type param here?
-fun cell(
-    key:String= autoKey(),
-    machine:String?=null,
-    machineKey:String?=null,
-    simultaneous:Boolean=false,
-    context: ContextInterface = LocalContext,
-    block:Cell.()->Unit): Cell {
-
-    return Cell(key, context=context).apply {
-        machine?.let { this["machine"]=it }
-        machineKey?.let { this["machineKey"]=it }
-        this["simultaneous"] = simultaneous
-        createMe()
-        this.invoke(block)
-    }
-}

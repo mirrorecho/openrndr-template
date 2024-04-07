@@ -38,5 +38,11 @@ interface SelectInterface<T:LanguageItem> {
 
 }
 
+interface SelectNodeInterface<T:LanguageNode>:SelectInterface<T>  {
+    override val label: NodeLabelInterface<out T>
+}
 
+interface SelectRelationshipInterface<T:LanguageRelationship>:SelectInterface<T> {
+    override val label: RelationshipLabelInterface<out T>
+}
 

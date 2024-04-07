@@ -6,12 +6,9 @@ import rain.utils.autoKey
 
 open class Tree(
     key:String = autoKey(),
-    properties: Map<String, Any?> = mapOf(),
-    context: ContextInterface = LocalContext,
-): Pattern, Node(key, properties, context) {
-
-    override val label = LocalContext.getLabel("Tree", "Pattern") { k, p, c -> Tree(k, p, c) }
-
+): Pattern, Node(key) {
+    companion object : NodeCompanion<Tree>(Node.childLabel { k -> Tree(k) })
+    override val label: NodeLabel<out Tree> = Tree.label
 
     override val isAlter = false
 
@@ -19,30 +16,30 @@ open class Tree(
 
     // TODO: make these by lazy
 
-    override val branches: TreeSelect<T> get() = TreeBranchesSelect(context, this)
+    override val branches: TreeSelect<out Tree> get() = TreeBranchesSelect(Tree.label, this)
 
-    override val nodes: TreeSelect<Tree> get() = TreeNodesSelect(context, this)
+    override val nodes: TreeSelect<out Tree> get() = TreeNodesSelect(Tree.label, this)
 
-    override val leaves: TreeSelect<Leaf> get() = TreeLeavesSelect(context, this)
+    override val leaves: TreeSelect<out Leaf> get() = TreeLeavesSelect(Leaf.label, this)
 
     override var cuePath: CuePath? = null
 
     // replaced with cuePath below
 //    override var cachedParentage = listOf<Tree>()
 
-    val isEmpty: Boolean get() = r(SelectDirection.RIGHT, "CUES_FIRST").first == null
+    val isEmpty: Boolean get() = r(Relationship.patterns.CUES_FIRST).first == null
 
 
-    fun extend(vararg patterns: Pattern) {
+    fun extend(vararg trees: Tree) {
 
         // creates all Cue nodes for the extension (inc. Contains and Cues relationships)
-        val cueNodes = patterns.map {
+        val cueNodes = trees.map {
             val cue = Cue().apply { createMe() }
 
-            relate("CONTAINS", cue)
+            relate(Relationship.patterns.CONTAINS, cue)
             //Contains(source_key = this.key, target_key = cue.key).createMe()
 
-            cue.relate("CUES", it as Node)
+            cue.relate(Relationship.patterns.CUES, it)
             // Cues(source_key = cue.key, target_key = it.key).createMe()
             cue
         }
@@ -51,33 +48,38 @@ open class Tree(
             // if empty, then create the CuesFirst
                 // note... empty check works even after creating the Contains relationships above
                 // because the isEmpty logic checks for CUES_FIRST
-            CuesFirst(source_key = this.key, target_key = cueNodes[0].key).createMe()
+            Relationship.patterns.CUES_FIRST.create(this.key, cueNodes[0].key)
         else {
             // otherwise create a CuesNext relationship from the existing CuesLast target node to the start of extension cue nodes
-            // and remove the the CuesLast
-            val cuesLast = r(SelectDirection.RIGHT, "CUES_LAST").first!! as Relationship
-            CuesNext(source_key = cuesLast.target_key, target_key = cueNodes[0].key).createMe()
-            cuesLast.delete()
+            // and remove the CuesLast
+            r(Relationship.patterns.CUES_LAST).first!!.let {
+                Relationship.patterns.CUES_NEXT.create(it.targetKey, cueNodes[0].key)
+                it.delete()
+            }
         }
 
         // creates CuesNext relationships between all the Cue nodes
         cueNodes.asIterable().zipWithNext { c, cNext ->
-            CuesNext(source_key = c.key, target_key = cNext.key).createMe()
+            Relationship.patterns.CUES_NEXT.create(c.key, cNext.key)
         }
 
         // adds CuesLast relationship at the end
-        CuesLast(source_key = this.key, target_key = cueNodes.last().key).createMe()
+        Relationship.patterns.CUES_LAST.create(this.key, cueNodes.last().key)
 
     }
 }
 
 open class EventTree(
     key:String = autoKey(),
-    properties: Map<String, Any?> = mapOf(),
-    context: ContextInterface = LocalContext,
-): EventPattern, Tree(key, properties, context) {
+): EventPattern, Tree(key) {
+    companion object : NodeCompanion<EventTree>(Tree.childLabel { k -> EventTree(k) })
+    override val label: NodeLabel<out EventTree> = EventTree.label
 
-    override val label = LocalContext.getLabel("EventTree", "Tree", "EventPattern", "Pattern") { k, p, c -> EventTree(k, p, c) }
+    override val branches: TreeSelect<out EventTree> get() = TreeBranchesSelect(EventTree.label, this)
+
+    override val nodes: TreeSelect<out EventTree> get() = TreeNodesSelect(EventTree.label, this)
+
+    override val leaves: TreeSelect<out Event> get() = TreeLeavesSelect(Event.label, this)
 
     override var simultaneous: Boolean by this.properties.apply { putIfAbsent("simultaneous", false) }
 

@@ -14,42 +14,33 @@ interface LanguageItem: GraphableItem, Labelable<LanguageItem>  {
 
     val graph: GraphInterface get() = this.context.graph
 
-    fun save() {
-        graph.save(this)
-//        return this
-    }
-
-//    fun read() {
-//        graph.read(this)
-////        return this
-//    }
-
-    fun delete() {
-        graph.delete(this.key)
-    }
-
-    fun mergeMe() {
-        graph.merge(this)
-//        return this
-    }
-
-    fun createMe() {
-        graph.create(this)
-//        return this
-    }
-
-//    fun <T>getAs(n:String) = this[n] as T
-
 }
-
-// TODO: why these interfaces below...?
 
 // ===========================================================================================================
 
 interface LanguageNode: LanguageItem, GraphableNode {
+    fun save() = graph.save(this)
+
+    fun read() = graph.read(this)
+
+    fun delete() = graph.deleteNode(this.key)
+
+    fun mergeMe() = graph.merge(this) // TODO maybe: rename to merge?
+
+    fun createMe() = graph.create(this) // TODO maybe: rename to create?
 
 }
 
 // ===========================================================================================================
 
-interface LanguageRelationship: LanguageItem, GraphableRelationship {}
+interface LanguageRelationship: LanguageItem, GraphableRelationship {
+    fun save() = graph.save(this)
+
+    fun read() = graph.read(this)
+
+    fun delete() = graph.deleteRelationship(this.key)
+
+    fun mergeMe() = graph.merge(this) // TODO maybe: rename to merge?
+
+    fun createMe() = graph.create(this) // TODO maybe: rename to create?
+}

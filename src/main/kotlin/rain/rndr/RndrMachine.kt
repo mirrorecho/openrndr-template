@@ -16,32 +16,31 @@ import rain.patterns.*
 
 abstract class RndrMachine(
     key:String = autoKey(),
-): MachinePattern, Node(key) { // TODO: is Leaf the best parent class? (Relationships might not be simple tree patterns.)
-    companion object : NodeCompanion<RndrMachine>(Node.childLabel { k -> Node(k) as RndrMachine })
+): MachinePattern, Machine(key) { // TODO: is Leaf the best parent class? (Relationships might not be simple tree patterns.)
+    companion object : NodeCompanion<RndrMachine>(Machine.childLabel { k -> Node(k) as RndrMachine })
     override val label: NodeLabel<out RndrMachine> = RndrMachine.label
 
-    override val isAlter = false
 
-    override val isLeaf = false
+//    TODO: implement below if implementing Pattern interface for Machine ...
 
-    override val branches = EmptySelect(context)
-
-    // TODO: implement hook logic here?
-    override val leaves get() = EmptySelect(context)
-
-    override val nodes get() = EmptySelect(context)
-
-    override var cuePath: CuePath? = null
+//    override val isAlter = false
+//
+//    override val isLeaf = false
+//
+//    override val branches = EmptySelect(context)
+//
+//    // TODO: implement hook logic here?
+//    override val leaves get() = EmptySelect(context)
+//
+//    override val nodes get() = EmptySelect(context)
+//
+//    override var cuePath: CuePath? = null
 
     // TODO: useful...?
     // parentMachine?
 
-    // TODO maybe: this is a little wonky ... refactor?
-    private val targetMachineKeys: MutableSet<String> = mutableSetOf()
-    val targetMachines: SelectInterface get() = Select(keys=targetMachineKeys.toList())
-
     override fun trigger(event:Event) {
-        // TODO: implement gatting and such
+        // TODO: implement gating and such
         if (event.gate==true) {
 
         }
@@ -73,13 +72,6 @@ abstract class RndrMachine(
 //        }
 //
 //    }
-
-    fun <RMT:RndrMachine>targetMachine(rLabel:RelationshipLabel, nLabel:NodeLabel<RMT>, keyName:String): RMT {
-        // TODO: implement keyName?
-        val returnMachine = targetsOrMake(rLabel, nLabel)
-        targetMachineKeys.add(returnMachine.key)
-        return returnMachine
-    }
 
 
     // TODO: implement

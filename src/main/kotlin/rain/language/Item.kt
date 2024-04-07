@@ -4,7 +4,7 @@ import rain.interfaces.*
 import rain.rndr.rndr
 
 import rain.utils.autoKey
-import kotlin.reflect.KMutableProperty0
+import kotlin.reflect.KProperty0
 
 
 // ===========================================================================================================
@@ -61,11 +61,14 @@ open class Node(
 
     val selectSelf by lazy { SelectSelf(this) }
 
-    protected open val autoCreateTargets:List<KMutableProperty0<out CachedTarget<out Node>>> = listOf()
+    protected open val targetProperties:List<KProperty0<CachedTarget<out Node>>> = listOf()
 
     fun autoTarget() {
-        autoCreateTargets.forEach {
-            it.get().createIfMissing()
+        targetProperties.forEach {
+            it.get().apply {
+                createIfMissing()
+                target?.autoTarget() // cascade down...
+            }
         }
     }
 

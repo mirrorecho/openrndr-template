@@ -17,10 +17,10 @@ open class Circle(
     var radius = cachedTarget(Relationship.rndr.RADIUS, Value.label)
     var strokeWeight = cachedTarget(Relationship.rndr.STROKE_WEIGHT, Value.label)
     var strokeColor = cachedTarget(Relationship.rndr.STROKE_COLOR, Color.label)
-//    val fillColor: Color = targetMachine("FILL_COLOR", "fillColorKey")
-//    val position: Position = targetMachine("POSITION", "positionKey")
-
-    override val autoCreateTargets = listOf(::radius, ::strokeWeight, ::strokeColor)
+    val fillColor = cachedTarget(Relationship.rndr.FILL_COLOR, Color.label)
+    val position = cachedTarget(Relationship.rndr.POSITION, Position.label)
+//
+    override val targetProperties = listOf(::radius, ::strokeWeight, ::strokeColor, ::fillColor, ::position)
 
 
 //    // TODO: implement if needed (or remove)
@@ -29,16 +29,16 @@ open class Circle(
 //        super.trigger(event)
 //    }
 
-//    fun render(program: Program) {
-////        println("circle with x position " + position.x.value.toString())
-//        program.apply {
-//            drawer.fill = fillColor.target?.colorRGBa()
-//            drawer.stroke = strokeColor.target?.colorRGBa()
-//            strokeWeight.target?.apply { drawer.strokeWeight = value }
-//            drawer.circle(
-//                position.vector(program),
-//                radius.value,
-//            )
-//        }
-//    }
+    fun render(program: Program) {
+//        println("circle with x position " + position.x.value.toString())
+        program.apply {
+            drawer.fill = fillColor.target?.colorRGBa()
+            drawer.stroke = strokeColor.target?.colorRGBa()
+            strokeWeight.target?.apply { drawer.strokeWeight = value }
+            drawer.circle(
+                position.target!!.vector(program), // NOTE: ERROR IF NO POSITION
+                radius.target?.value ?: 90.0,
+            )
+        }
+    }
 }

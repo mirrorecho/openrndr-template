@@ -10,11 +10,11 @@ interface Pattern: LanguageNode {
 
     val isLeaf: Boolean
 
-    val branches: Select<Tree>
+    val branches: SelectNodes<out Tree>
 
-    val leaves: Select<Leaf>
+    val leaves: SelectNodes<out Leaf>
 
-    val nodes: Select<Tree>
+    val nodes: SelectNodes<out Tree>
 
     // set to an instance of CuePath if this node is created in the context of a TreeSelect
     var cuePath: CuePath?
@@ -25,8 +25,8 @@ interface Pattern: LanguageNode {
 
     fun <T>getUp(name:String):T = propertiesUp[name] as T
 
-    fun <T:Item>getSelect(select: Select<T> = Select(context=context, selectFrom=this.selectSelf) ) {
-    }
+//    fun <T:Item>getSelect(select: Select<T> = Select(context=context, selectFrom=this.selectSelf) ) {
+//    }
 
     fun saveDown() {
         nodes.forEach { save() }

@@ -3,9 +3,11 @@ package rain.machines
 import rain.interfaces.*
 import rain.language.*
 import rain.patterns.*
+import rain.rndr.RndrMachine
 
 
-interface MachinePattern: Pattern {
+// TODO maybe: inherit from Pattern?
+interface MachinePattern {
 
 //    fun reset() { throw NotImplementedError() }
 
@@ -18,11 +20,9 @@ interface MachinePattern: Pattern {
 
 abstract class Machine(
     key:String = rain.utils.autoKey(),
-    properties: Map<String, Any?> = mapOf(),
-    context: ContextInterface = LocalContext,
-): MachinePattern, Leaf(key, properties, context) {
-
-    override val label = LocalContext.getLabel("Printer", "Machine") { k, p, c -> Printer(k, p, c) }
+): MachinePattern, Node(key) {
+    companion object : NodeCompanion<Machine>(Node.childLabel { k -> Node(k) as Machine })
+    override val label: NodeLabel<out Machine> = Machine.label
 
     override fun trigger(event:Event) {
         // TODO: implement
@@ -34,11 +34,9 @@ abstract class Machine(
 
 open class Printer(
     key:String = rain.utils.autoKey(),
-    properties: Map<String, Any?> = mapOf(),
-    context: ContextInterface = LocalContext,
-): MachinePattern, Leaf(key, properties, context) {
-
-    override val label = LocalContext.getLabel("Printer", "Machine") { k, p, c -> Printer(k, p, c) }
+): MachinePattern, Machine(key) {
+    companion object : NodeCompanion<Printer>(Machine.childLabel { k -> Printer(k) })
+    override val label: NodeLabel<out Printer> = Printer.label
 
     override fun trigger(event:Event) {
         // TODO: implement

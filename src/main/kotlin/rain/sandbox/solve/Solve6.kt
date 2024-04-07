@@ -1,5 +1,6 @@
 package rain.sandbox.solve
 
+import rain.graph.Graph
 import rain.patterns.*
 import rain.language.*
 import rain.rndr.*
@@ -7,9 +8,23 @@ import rain.rndr.*
 
 
 fun main() {
-    val c = Circle.create()
+    val c = Circle.create("YOMAMA")
+//    val c2 = Circle.create()
+//    c.relate(Relationship.TARGETS, c2)
     c.autoTarget()
-    c.radius.target?.value
+    c.radius.target?.apply { this["value"]=400.0; save() }
+
+    val r = Relationship.rndr.RADIUS.select().n(Value.label)
+    val rv = r.first!!
+    println(r.asSequence().toList().size)
+
+    rv["value"] = 20.0
+    rv.save()
+
+    println(rv.properties)
+    c.radius.target = null
+    println(c.radius.target?.get("value"))
+
 }
 //    val c = cell("C1", "Circle", "CIRCLE1") {
 //        this["easing"] = "CubicIn"
