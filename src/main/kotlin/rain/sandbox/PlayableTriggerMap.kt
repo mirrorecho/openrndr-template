@@ -2,7 +2,7 @@ package rain.sandbox
 //
 //import org.openrndr.Program
 //import rain.language.Palette
-//import rain.machines.Machine
+//import rain.machines.nodes.Machine
 //import rain.rndr.*
 //import rain.utils.autoKey
 //

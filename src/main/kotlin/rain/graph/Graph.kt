@@ -8,8 +8,8 @@ class Graph: GraphInterface {
     val graphNodes: MutableMap<String, GraphNode> = mutableMapOf()
     val graphRelationships: MutableMap<String, GraphRelationship> = mutableMapOf()
 
-    private val nodeLabelIndex: MutableMap<String, MutableMap<String, GraphNode>> = mutableMapOf()
-    private val relationshipLabelIndex: MutableMap<String, MutableMap<String, GraphRelationship>> = mutableMapOf()
+    val nodeLabelIndex: MutableMap<String, MutableMap<String, GraphNode>> = mutableMapOf()
+    val relationshipLabelIndex: MutableMap<String, MutableMap<String, GraphRelationship>> = mutableMapOf()
 
     override fun contains(key:String) = key in graphNodes || key in graphRelationships
 
@@ -153,10 +153,8 @@ class Graph: GraphInterface {
 
     // =================================================================================
 
-    // TODO: bring back label filters!!!!!!
-
     private fun selectGraphNodes(select: SelectInterface<*>): Sequence<GraphNode> =
-        select.selectFrom?.let {sf ->
+        (select.selectFrom?.let {sf ->
             when (select.direction) {
                 SelectDirection.RIGHT_NODE -> selectGraphRelationships(sf).map { r -> r.target }
                 SelectDirection.LEFT_NODE -> selectGraphRelationships(sf).map { r -> r.source }
@@ -164,11 +162,11 @@ class Graph: GraphInterface {
             }.filterKeys(select.keys).filterNodeLabel(select.label)
         } ?: run {
             nodeLabelIndex[select.label.name].orEmpty().sequenceKeys(select.keys)
-        }.filterProperties( select.properties )
+        }).filterProperties( select.properties )
 
 
     private fun selectGraphRelationships(select:SelectInterface<*>):Sequence<GraphRelationship> =
-        select.selectFrom?.let {sf ->
+        (select.selectFrom?.let {sf ->
             when (select.direction) {
                 SelectDirection.RIGHT -> sequence {
                     selectGraphNodes(sf).forEach { n -> n.sourcesFor.forEach { yield(it.key) } }
@@ -180,7 +178,7 @@ class Graph: GraphInterface {
             }.filterKeys(select.keys).filterRelationshipLabel(select.label)
         } ?: run {
             relationshipLabelIndex[select.label.name].orEmpty().sequenceKeys(select.keys)
-        }.filterProperties( select.properties )
+        }).filterProperties( select.properties )
 
 
 //    private fun selectLocalItems(select:SelectInterface<*>):Sequence<GraphItem> {

@@ -1,7 +1,7 @@
 //package rain.sandbox.solve
 //
 //import rain.language.Palette
-//import rain.patterns.Cell
+//import rain.patterns.nodes.Cell
 //import rain.rndr.*
 //
 //

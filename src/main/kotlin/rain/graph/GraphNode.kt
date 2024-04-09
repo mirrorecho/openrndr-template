@@ -8,6 +8,8 @@ class GraphNode(
     properties: Map<String, Any?> = mapOf()
 ) : GraphableNode, GraphItem {
 
+    override fun toString():String = "GRAPH NODE: $primaryLabel($key) $properties"
+
     override val properties: MutableMap<String, Any?> = properties.toMutableMap()
 
     //maps for faster indexing ... keys are relationships, values are the target nodes

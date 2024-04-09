@@ -1,29 +1,92 @@
 package rain.sandbox.solve
 
 import rain.graph.Graph
-import rain.patterns.*
+import rain.interfaces.SelectDirection
 import rain.language.*
-import rain.rndr.*
 
+import rain.patterns.nodes.*
+import rain.patterns.relationships.*
+import rain.rndr.nodes.*
+import rain.rndr.relationships.*
 
 
 fun main() {
-    val c = Circle.create("YOMAMA")
-//    val c2 = Circle.create()
-//    c.relate(Relationship.TARGETS, c2)
-    c.autoTarget()
-    c.radius.target?.apply { this["value"]=400.0; save() }
 
-    val r = Relationship.rndr.RADIUS.select().n(Value.label)
-    val rv = r.first!!
-    println(r.asSequence().toList().size)
+    val graph = LocalContext.graph as Graph
 
-    rv["value"] = 20.0
-    rv.save()
+    val n0 = Node.create("N0")
+    val n1 = Node.create("N1")
+    val n2 = Node.create("N2")
+    val r01 = n0.relate(TRIGGERS, n1)
+    val r02 = n0.relate(TRIGGERS, n2)
+    val r1 = n1.relate(TARGETS, n2, "YO1-2")
+    val r2 = n2.relate(TARGETS, n1, "YO2-1")
 
-    println(rv.properties)
-    c.radius.target = null
-    println(c.radius.target?.get("value"))
+//    val r1 = relate(n1, TARGETS, n2, "YO1-2")
+//    val r1 = TARGETS.create("N1", "N2")
+//    val r2 = relate(n2, TARGETS, n1, "YO2-1")
+
+//    SelectRelationships(TARGETS).forEach { println(it) }
+    n1.r(TARGETS).forEach { println(it) }
+
+//    val t = Tree.create("T0", mapOf("yo" to 0)) {
+//        extend(
+//            Tree.create("T1", mapOf("yo" to 1)) {
+////                extend(
+////                    Leaf.create("T1-1"),
+////                    Leaf.create("T1-2", mapOf("yo" to 2)),
+//////                    Leaf.create { this["yo"]=3 },
+//////                    Leaf.create {  },
+////                )
+//            },
+//            Leaf.create {  },
+////            Leaf.create("T4", mapOf("yo" to 4)),
+//        )
+//    }
+//
+//    val tSelect = SelectRelationships(CONTAINS)
+//
+////    println(SelectRelationships(CONTAINS).asSequence().toList().size)
+//
+////    val tSelect = SelectNodes(Tree.label, listOf("T1", "T2"))
+////    val tSelect = SelectNodes(Tree.label, listOf("T1", "T4")).r(CONTAINS).n(Node.label)
+////    val tSelect = SelectRelationships(CONTAINS, direction = SelectDirection.RIGHT).n(Node.label).r(CUES)
+////    val tSelect = SelectRelationships(TARGETS)
+    println("----------------------------------------")
+////    tSelect.forEach { println(it); println(" - target: ${it.targetKey}") }
+//
+    graph.graphRelationships.forEach { println( it ) }
+
+//    t.branches.forEach { println(it.properties) }
+
+//    val c = Cell.create("C1") { machine = Circle.label }.apply {
+//        stream("dur", 1.0, 2.0, 1.0, 4.0)
+////        channel(RADIUS) {
+////            stream("value", 90.0, 20.0, 400.0, 200.0)
+////        }
+////        channel(RADIUS) {
+////            stream("value", 90.0, 20.0, 400.0, 200.0)
+////        }
+//    }
+
+//    c.nodes.forEach { println(it.properties) }
+
+//    val c = Circle.create("YOMAMA")
+////    val c2 = Circle.create()
+////    c.relate(Relationship.TARGETS, c2)
+//    c.autoTarget()
+//    c.radius.target?.apply { this["value"]=400.0; save() }
+//
+//    val r = Relationship.rndr.RADIUS.select().n(Value.label)
+//    val rv = r.first!!
+//    println(r.asSequence().toList().size)
+//
+//    rv["value"] = 20.0
+//    rv.save()
+//
+//    println(rv.properties)
+//    c.radius.target = null
+//    println(c.radius.target?.get("value"))
 
 }
 //    val c = cell("C1", "Circle", "CIRCLE1") {

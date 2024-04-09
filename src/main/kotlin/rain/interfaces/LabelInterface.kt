@@ -11,34 +11,51 @@ interface LabelInterface<T:LanguageItem> {
 }
 
 interface NodeLabelInterface<T:LanguageNode>: LabelInterface<T> {
-    val factory: (String)->T
     override val isRelationship: Boolean get() = false
+
+    val factory: (String)->T
 
     fun from(gNode:GraphableNode):T =
         factory(gNode.key).apply { updatePropertiesFrom(gNode) }
 
-    fun merge(key:String = autoKey(), block:( T.()->Unit )?=null ):T =
-        factory(key).apply { block?.invoke(this); mergeMe() }
+    fun merge(key:String = autoKey(), properties:Map<String,Any?>?=null, block:( T.()->Unit )?=null ):T =
+        factory(key).apply {
+            properties?.let{ this.properties.putAll(it) };
+            mergeMe();
+            block?.invoke(this);
+        }
 
-    fun create(key:String = autoKey(), block:( T.()->Unit )?=null ):T =
-        factory(key).apply { block?.invoke(this); createMe() }
+    fun create(key:String = autoKey(), properties:Map<String,Any?>?=null, block:( T.()->Unit )?=null ):T =
+        factory(key).apply {
+            properties?.let{ this.properties.putAll(it) };
+            createMe();
+            block?.invoke(this);
+        }
 
 }
 
 interface RelationshipLabelInterface<T:LanguageRelationship>: LabelInterface<T> {
     override val isRelationship: Boolean get() = true
-    override val isRoot: Boolean get() = true
+    override val isRoot: Boolean get() = false
+
+    fun factory(sourceKey:String, targetKey:String, key:String = autoKey() ): T
 
     fun from(gRelationship:GraphableRelationship):T = gRelationship.run {
-        factory(key, source.key, target.key).also { it.updatePropertiesFrom(this) }
+        factory(source.key, target.key, key).also { it.updatePropertiesFrom(this) }
     }
 
-    fun merge(sourceKey:String, targetKey:String, key:String = autoKey(), block:( T.()->Unit )?=null ):T =
-        factory(sourceKey, targetKey, key).apply { block?.invoke(this); mergeMe() }
+    fun merge(sourceKey:String, targetKey:String, key:String, properties:Map<String,Any?>?=null, block:( T.()->Unit )?=null ):T =
+        factory(sourceKey, targetKey, key).apply {
+            properties?.let{ this.properties.putAll(it) };
+            mergeMe();
+            block?.invoke(this);
+        }
 
-    fun create(sourceKey:String, targetKey:String, key:String = autoKey(),block:( T.()->Unit )?=null ):T =
-        factory(sourceKey, targetKey, key).apply { block?.invoke(this); createMe() }
-
-    fun factory(sourceKey:String, targetKey:String, key:String = autoKey()): T
+    fun create(sourceKey:String, targetKey:String, key:String = autoKey(), properties:Map<String,Any?>?=null, block:( T.()->Unit )?=null ):T =
+        factory(sourceKey, targetKey, key).apply {
+            properties?.let{ this.properties.putAll(it) };
+            createMe();
+            block?.invoke(this);
+        }
 
 }

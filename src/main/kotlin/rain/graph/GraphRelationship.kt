@@ -10,6 +10,8 @@ class GraphRelationship(
     properties: Map<String, Any?> = mapOf()
 ) : GraphableRelationship, GraphItem {
 
+    override fun toString():String = "GRAPH RELATIONSHIP: (${source.key} $primaryLabel ${target.key} | $key) $properties"
+
     override val properties: MutableMap<String, Any?> = properties.toMutableMap()
 
     // TODO: replace with label instance
