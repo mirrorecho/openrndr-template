@@ -1,48 +1,61 @@
 package rain.interfaces
 
-interface SelectInterface<T:LanguageItem> {
+import rain.language.SelectNodes
+import rain.language.SelectRelationships
 
-    val label: LabelInterface<out T>
+interface SelectInterface {
 
-    val graph: GraphInterface get() = label.context.graph
+    val labelName:String?
 
     val keys: List<String>?
 
     val properties: Map<String, Any?>?
 
-    val selectFrom: SelectInterface<*>?
+    val selectFrom: SelectInterface?
 
-    val direction: SelectDirection?
+    val direction: SelectDirection? // used only for relationships
 
-    val cachedItems: List<T>
-
-    fun asSequence(): Sequence<T>
-
-    fun forEach(action:(T)->Unit) {
-        asSequence().forEach {action(it)} }
-
-    // TODO maybe: could use for more general implementation
-//    fun indexOfFirst(key:String, predicate: (LanguageItem)-> Boolean ): Int {
-//        return this.asSequence().indexOfFirst(predicate)
-//    }
-
-    fun indexOfFirst(key:String ): Int = this.asSequence().indexOfFirst {it.key==key}
-
-    operator fun get(key: String) {throw NotImplementedError()}
-
-    operator fun get(index: Int) {throw NotImplementedError()}
-
-    fun contains(key: String): Boolean = this.indexOfFirst(key) > -1
-
-    val first: T? get() = this.asSequence().firstOrNull()
+    val rootSelect: SelectInterface get() = selectFrom?.rootSelect ?: this
 
 }
 
-interface SelectNodeInterface<T:LanguageNode>:SelectInterface<T>  {
-    override val label: NodeLabelInterface<out T>
+interface NodeSelectable {
+    val selectFrom: SelectInterface?
+    val labelName:  String?
+
+    fun select(vararg keys:String) =
+        SelectNodes(keys.asList(), null, labelName, selectFrom)
+
+    fun select(properties:Map<String,Any>?=null) =
+        SelectNodes(null, properties, labelName, selectFrom)
+
+    operator fun get(vararg selects: SelectNodes):SelectNodes {
+
+    }
+
 }
 
-interface SelectRelationshipInterface<T:LanguageRelationship>:SelectInterface<T> {
-    override val label: RelationshipLabelInterface<out T>
-}
+interface RelationshipSelectable {
+    val selectFrom: SelectInterface?
+    val labelName:  String
 
+    fun select(vararg keys:String, direction:SelectDirection = SelectDirection.RIGHT) =
+        SelectRelationships(keys.asList(), null, labelName, direction, selectFrom)
+
+    fun select(properties:Map<String,Any>?=null, direction:SelectDirection = SelectDirection.RIGHT) =
+        SelectRelationships(null, properties, labelName, direction, selectFrom)
+
+    fun n(
+        vararg keys: String,
+        properties:Map<String,Any>?=null,
+        labelName:String?=null
+    ):SelectNodes {
+        return SelectNodes(
+            keys.asList(),
+            properties,
+            labelName,
+            this,
+        )
+    }
+
+}

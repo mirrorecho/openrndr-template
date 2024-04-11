@@ -14,35 +14,19 @@ fun main() {
 
     val graph = LocalContext.graph as Graph
 
-    val n0 = Node.create("N0")
-    val n1 = Node.create("N1")
-    val n2 = Node.create("N2")
-    val r01 = n0.relate(TRIGGERS, n1)
-    val r02 = n0.relate(TRIGGERS, n2)
-    val r1 = n1.relate(TARGETS, n2, "YO1-2")
-    val r2 = n2.relate(TARGETS, n1, "YO2-1")
-
-//    val r1 = relate(n1, TARGETS, n2, "YO1-2")
-//    val r1 = TARGETS.create("N1", "N2")
-//    val r2 = relate(n2, TARGETS, n1, "YO2-1")
-
-//    SelectRelationships(TARGETS).forEach { println(it) }
-    n1.r(TARGETS).forEach { println(it) }
-
-//    val t = Tree.create("T0", mapOf("yo" to 0)) {
-//        extend(
-//            Tree.create("T1", mapOf("yo" to 1)) {
-////                extend(
-////                    Leaf.create("T1-1"),
-////                    Leaf.create("T1-2", mapOf("yo" to 2)),
-//////                    Leaf.create { this["yo"]=3 },
-//////                    Leaf.create {  },
-////                )
-//            },
-//            Leaf.create {  },
-////            Leaf.create("T4", mapOf("yo" to 4)),
-//        )
-//    }
+    val t = Tree.create("T0", mapOf("yo" to 0)) {
+        extend(
+            Tree.create("T1", mapOf("yo" to 1)) {
+                extend(
+                    Leaf.create("T1-1"),
+                    Leaf.create("T1-2", mapOf("yo" to 2)),
+                    Leaf.create {  },
+                )
+            },
+            Leaf.create {  },
+            Leaf.create("T4", mapOf("yo" to 4)),
+        )
+    }
 //
 //    val tSelect = SelectRelationships(CONTAINS)
 //
@@ -50,12 +34,15 @@ fun main() {
 //
 ////    val tSelect = SelectNodes(Tree.label, listOf("T1", "T2"))
 ////    val tSelect = SelectNodes(Tree.label, listOf("T1", "T4")).r(CONTAINS).n(Node.label)
-////    val tSelect = SelectRelationships(CONTAINS, direction = SelectDirection.RIGHT).n(Node.label).r(CUES)
+    val tSelect = t.leaves
 ////    val tSelect = SelectRelationships(TARGETS)
     println("----------------------------------------")
+    tSelect.forEach { println(it) }
+
+
 ////    tSelect.forEach { println(it); println(" - target: ${it.targetKey}") }
 //
-    graph.graphRelationships.forEach { println( it ) }
+//    graph.graphRelationships.forEach { println( it ) }
 
 //    t.branches.forEach { println(it.properties) }
 

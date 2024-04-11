@@ -8,7 +8,7 @@ class GraphNode(
     properties: Map<String, Any?> = mapOf()
 ) : GraphableNode, GraphItem {
 
-    override fun toString():String = "GRAPH NODE: $primaryLabel($key) $properties"
+    override fun toString():String = "GRAPH NODE: $labelName($key) $properties"
 
     override val properties: MutableMap<String, Any?> = properties.toMutableMap()
 
@@ -16,7 +16,7 @@ class GraphNode(
     internal val sourcesFor = mutableMapOf<GraphRelationship, GraphNode>()
     internal val targetsFor = mutableMapOf<GraphRelationship, GraphNode>()
 
-    override val primaryLabel = labels[0]
+    override val labelName = labels[0]
 
     override fun cleanup(graph: Graph) {
         labels.forEach { graph.discardLabelIndex(it, this) }

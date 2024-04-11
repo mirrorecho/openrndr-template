@@ -10,50 +10,53 @@ import rain.utils.autoKey
 
 open class Tree(
     key:String = autoKey(),
-): Pattern, Node(key) {
+): Node(key) {
     companion object : NodeCompanion<Tree>(Node.childLabel { k -> Tree(k) })
     override val label: NodeLabel<out Tree> = Tree.label
 
-    override val isAlter = false
+    val isAlter = false
 
-    override val isLeaf = false
+    val isLeaf = false
 
-    // TODO: make these by lazy
+    // TODO maybe: make these by lazy
 
-    override val branches: TreeSelect<out Tree> get() = TreeBranchesSelect(Tree.label, this)
-
-    override val nodes: TreeSelect<out Tree> get() = TreeNodesSelect(Tree.label, this)
-
-    override val leaves: TreeSelect<out Leaf> get() = TreeLeavesSelect(Leaf.label, this)
-
-    override var cuePath: CuePath? = null
+    val select = TreeSelects(Tree.label, this)
 
     // replaced with cuePath below
 //    override var cachedParentage = listOf<Tree>()
 
+    // TODO: testing!
+    //TODO: below assumes that all ancestor properties should carry down... are we sure that's what we want?
+    val propertiesUp: Map<String, Any?> get() = properties + cuePath?.properties.orEmpty()
+
+    fun <T>getUp(name:String):T = propertiesUp[name] as T
+
+//    fun <T:Item>getSelect(select: Select<T> = Select(context=context, selectFrom=this.selectSelf) ) {
+//    }
+
+    fun saveDown() {
+        nodes.forEach { save() }
+    }
+
+//    fun <T>vein(name: String): Sequence<T> = leaves.asSequence().map { it.properties[key] as T }
+
+    // TODO: does this work???
+    fun setVein(name: String, vararg values:Any) {
+        leaves.asSequence().zip(values.asSequence()).forEach { it.first[key] = it.second }
+    }
+
+
     val isEmpty: Boolean get() = r(CUES_FIRST).first == null
 
 
-    fun extend(vararg trees: Tree) {
-        println("===============================================")
-        println("ADDING ${trees.size} TREES")
+    fun extend(vararg childTrees: Tree) {
 
         // creates all Cue nodes for the extension (inc. Contains and Cues relationships)
-        val cues = trees.map {
-            val cue = Cue.create()
-
-            val r = this.relate(CONTAINS, cue)
-            println("relating $this to $cue")
-            println(r)
-            println("--")
-            //Contains(source_key = this.key, target_key = cue.key).createMe()
-
-            cue.relate(CUES, it)
-            // Cues(source_key = cue.key, target_key = it.key).createMe()
-            cue
-        }
-        cues.forEach {
-            println(it)
+        val cues = childTrees.map {childTree ->
+            Cue.create().also {cue ->
+                this.relate(CONTAINS, childTree)
+                cue.relate(CUES, childTree)
+            }
         }
 
         if (isEmpty)
@@ -78,7 +81,20 @@ open class Tree(
         // adds CuesLast relationship at the end
         CUES_LAST.create(this.key, cues.last().key)
 
-        println("----------------------")
-
     }
+
+
+    // TODO: implement
+    // abstract val parents: SelectInterface
+
+    // TODO: implement the below
+//    # TODO: assume this doesn't need to be serialized?
+//    leaf_hooks: Iterable[Callable[["rain.Pattern", "rain.Pattern"], "rain.Pattern"]] = ()
+//    vein_hooks: Iterable[Callable[["rain.Pattern", Any, int], Any]] = ()
+//    _parentage = ()
+//    # TODO: MAYBE consider this
+//    # node_hooks: Iterable[Callable[["rain.Pattern", "rain.Pattern"], "rain.Pattern"]] = ()
+//
+
+
 }

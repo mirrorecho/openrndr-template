@@ -1,17 +1,17 @@
 package rain.language
 
-import rain.interfaces.LanguageNode
-import rain.interfaces.SelectDirection
+import rain.interfaces.*
 import rain.utils.autoKey
 import kotlin.reflect.KProperty0
 
 open class Node(
     key:String = autoKey(),
-): LanguageNode, Item(key) {
+): LanguageNode, NodeSelectable, Item(key) {
     companion object : NodeCompanion<Node>( rootLabel {k->Node(k) } )
     override val label:NodeLabel<out Node> = Node.label
 
-    val selectSelf by lazy { SelectSelf(this) }
+    override val selectFrom get() = sequence { yield(this@Node)  }.select()
+    override val labelName get() = label.labelName
 
     protected open val targetProperties:List<KProperty0<CachedTarget<out Node>>> = listOf()
 
@@ -33,7 +33,7 @@ open class Node(
         properties:Map<String,Any>?=null,
         direction: SelectDirection = SelectDirection.RIGHT,
     ): SelectRelationships =
-        selectSelf.r(
+        select.r(
             label,
             keys,
             properties,

@@ -11,7 +11,7 @@ abstract class Item(
 
     final override val properties: MutableMap<String, Any?> = mutableMapOf()
 
-    override fun toString():String = "$primaryLabel($key) $properties"
+    override fun toString():String = "$labelName($key) $properties"
 
     // TODO: worth keeping the fancy properties?? KISS!!!
 

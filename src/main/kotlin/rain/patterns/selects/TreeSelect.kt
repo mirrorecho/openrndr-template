@@ -1,52 +1,66 @@
 package rain.patterns.selects
 
+
+import rain.interfaces.SelectDirection
 import rain.language.*
 import rain.patterns.nodes.*
 import rain.patterns.relationships.*
 
-abstract class TreeSelect<T: Tree>(
-    label: NodeLabel<out T>,
-    protected val selfNode: Tree,
-    ): SelectNodes<T>(label) {
 
-    // TODO maybe... by lazy appropriate here? (assume yes)
-    override val keys by lazy { asSequence().map{it.key}.toList() }
+open class TreeSelects<T: Tree>(
+    val label: NodeLabel<T>,
+    private val selfTree: T,
+) {
+    // is a sequence or list better here????
+    private var cuedLineageSequence: Sequence<T> = sequenceOf()
 
-    // child classes must implement asSequence to avoid problems!
-    override fun asSequence(): Sequence<T> = getBranchCues().map { throw(NotImplementedError()) }
+    val branches = getBranches().select(label)
+    val nodes = getNodes().select(label)
+    val leaves = getLeaves().select(label)
 
-    fun getAncestors() = this.selfNode.cuePath?.ancestors.orEmpty() + listOf(this.selfNode)
+    val cuedLineage get() = cuedLineageSequence.select(Tree.label)
 
-    fun getBranchCues(): Sequence<Cue> = sequence {
-        this@TreeSelect.selfNode.r(CUES_FIRST).n(Cue.label).first?.let {
-            var branchCue: Cue? = it
-            while (branchCue != null) {
-                yield(branchCue)
-                branchCue = branchCue.r(CUES_NEXT).n(Cue.label).first
+    val parent: T? get() = cuedLineageSequence.lastOrNull()
+    val root: T? get() = cuedLineageSequence.firstOrNull()
+    val previous get() = selfTree.r(CUES, direction=SelectDirection.LEFT).n(Cue.label).r(CUES_NEXT, direction=SelectDirection.LEFT).n(Cue.label).r(CUES)
+//    val previous get() = selfTree.select(CUES.left, CUES_NEXT.left, CUES, label).first
+    val next get() = selfTree.select[ CUES.left(), CUES_NEXT(), CUES() ](label).first
+
+
+    // TODO maybe: implement these seq
+//    val aunts: Sequence<Tree>
+//    val preceding = Sequence<Tree>
+//    val following = Sequence<Tree>
+//    val siblings = Sequence<Tree>
+
+    // TODO eventually: figure out how to do this entirely with selects (without needing to instantiate Cue/Node with .first)
+    fun getBranches() = sequence {
+        selfTree.r(CUES_FIRST).n(Cue.label).first?.let {
+            var cue: Cue? = it
+            while (cue != null) {
+                yield(cue.cues(this@TreeSelects.label)!!.apply {
+                    select.cuedLineageSequence  = sequence {
+                        yield(selfTree);
+                        yieldAll(this@TreeSelects.cuedLineageSequence);
+                    }
+                })
+                cue = cue.r(CUES_NEXT).n(Cue.label).first
             }
         }
     }
 
-    fun <BT: Tree>getBranches(label: NodeLabel<out BT>): Sequence<BT> = getBranchCues().map {
-        // TODO: handle branch hooks
-        // TODO: test cuesPattern ancestors
-        val myCuePath = CuePath(it, this@TreeSelect.getAncestors())
-        it.cuesTree(label)!!.apply {
-//            println("setting cuePath for: " + this.toString())
-            this.cuePath = myCuePath
-        }
+    fun getNodes(fromNode:T=selfTree):Sequence<T> = sequence {
+        yield(fromNode)
+        getBranches().forEach { yieldAll(getNodes(it)) }
     }
-}
-// ===========================================================================================================
 
-open class TreeBranchesSelect<T: Tree>(
-    label: NodeLabel<out T>,
-    selfNode: Tree,
-): TreeSelect<T>(label, selfNode) {
-
-    override fun asSequence(): Sequence<T> = getBranches(label)
+    fun getLeaves(fromNode:T=selfTree):Sequence<T> = sequence {
+        if (fromNode.isLeaf) yield(fromNode)
+        getBranches().forEach { yieldAll(getLeaves(it)) }
+    }
 
 }
+
 // ===========================================================================================================
 
 open class TreeLeavesSelect<T: Leaf>(
@@ -55,7 +69,8 @@ open class TreeLeavesSelect<T: Leaf>(
 ): TreeSelect<T>(label, selfNode) {
 
     override fun asSequence(): Sequence<T> = sequence {
-        this@TreeLeavesSelect.getBranches<Tree>(label).forEach {
+        this@TreeLeavesSelect.getBranches(Tree.label).forEach {
+            println("BRANCH: $it")
             yieldAll( TreeLeavesSelect(label, it).asSequence() )
         }
     }

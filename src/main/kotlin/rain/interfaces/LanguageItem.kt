@@ -8,7 +8,7 @@ interface LanguageItem: GraphableItem, Labelable<LanguageItem>  {
 
     override val labels: List<String> get() = label.allNames
 
-    override val primaryLabel: String get() = label.name
+    override val labelName: String get() = label.labelName
 
     val context: ContextInterface get() = label.context
 

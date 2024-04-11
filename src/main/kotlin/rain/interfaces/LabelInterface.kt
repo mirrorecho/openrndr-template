@@ -3,7 +3,7 @@ package rain.interfaces
 import rain.utils.autoKey
 
 interface LabelInterface<T:LanguageItem> {
-    val name:String
+    val labelName:String
     val allNames: List<String>
     val isRoot: Boolean
     val isRelationship:Boolean

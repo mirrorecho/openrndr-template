@@ -1,6 +1,5 @@
 package rain.patterns.nodes
 
-import rain.interfaces.*
 import rain.language.*
 import rain.patterns.relationships.*
 
@@ -16,7 +15,7 @@ open class Cue(
     // TODO: these all need tests!
     // also TODO: should these be by lazy?
 
-    fun <T: Tree>cuesTree(label:NodeLabel<T>) = r(CUES).n(label).first
+    fun <T: Tree>cues(label:NodeLabel<T>) = r(CUES).n(label).first
 
     // TODO maybe: bring back if used
 //    fun <T:Tree>cuesNextTree() = r(SelectDirection.RIGHT, "CUES_NEXT").n<Cue>().r(SelectDirection.RIGHT, "CUES").n<T>().first

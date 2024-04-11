@@ -14,17 +14,20 @@ open class EventTree(
     companion object : NodeCompanion<EventTree>(Tree.childLabel { k -> EventTree(k) })
     override val label: NodeLabel<out EventTree> = EventTree.label
 
-    override val branches: TreeSelect<out EventTree> get() = TreeBranchesSelect(EventTree.label, this)
-
-    override val nodes: TreeSelect<out EventTree> get() = TreeNodesSelect(EventTree.label, this)
-
-    override val leaves: TreeSelect<out Event> get() = TreeLeavesSelect(Event.label, this)
+//    override val branches: TreeSelect<out EventTree> get() = TreeBranchesSelect(EventTree.label, this)
+//
+//    override val nodes: TreeSelect<out EventTree> get() = TreeNodesSelect(EventTree.label, this)
+//
+//    override val leaves: TreeSelect<out Event> get() = TreeLeavesSelect(Event.label, this)
 
     override var simultaneous: Boolean by this.properties.apply { putIfAbsent("simultaneous", false) }
 
-    override val dur: Double get() =
-        branches.asSequence().map { dur }.run {
-            if (simultaneous) { max() } else { sum() }
+    val sumDur: Double get() =
+        if (isLeaf) getUp("dur")
+        else {
+            branches.asSequence().map { sumDur }.run {
+                if (simultaneous) { max() } else { sum() }
+            }
         }
 
 

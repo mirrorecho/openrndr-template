@@ -16,7 +16,7 @@ interface GraphableItem {
     // TODO consider either Label class/object, and/or companion object
     val labels: List<String>
 
-    val primaryLabel: String
+    val labelName: String
 
     val properties: MutableMap<String, Any?>
 

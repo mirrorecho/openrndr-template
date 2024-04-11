@@ -17,15 +17,7 @@ class CuePath(
 ) {
 
     // TODO: these should all be selects instead of lists!
-    val aunts = listOf<Pattern>()
-    val preceding = listOf<Pattern>()
-    val following = listOf<Pattern>()
-    val siblings = listOf<Pattern>()
 
-    val parent: Pattern? = ancestors.lastOrNull()
-    val root: Pattern? = ancestors.firstOrNull()
-    val previous: Pattern? = null
-    val next: Pattern? = null
 
     val properties: Map<String, Any?> by lazy {
         parent?.properties.orEmpty() + parent?.cuePath?.properties.orEmpty()
