@@ -15,7 +15,8 @@ open class Cue(
     // TODO: these all need tests!
     // also TODO: should these be by lazy?
 
-    fun <T: Tree>cues(label:NodeLabel<T>) = r(CUES).n(label).first
+    // TODO: bring back if needed...
+//    fun <T: Tree>cues(label:NodeLabel<T>) = r(CUES).n(label).first
 
     // TODO maybe: bring back if used
 //    fun <T:Tree>cuesNextTree() = r(SelectDirection.RIGHT, "CUES_NEXT").n<Cue>().r(SelectDirection.RIGHT, "CUES").n<T>().first

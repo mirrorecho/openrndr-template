@@ -21,7 +21,6 @@ open class Circle(
 //
     override val targetProperties = listOf(::radius, ::strokeWeight, ::strokeColor, ::fillColor, ::position)
 
-
 //    // TODO: implement if needed (or remove)
 //    override fun trigger(event:Event) {
 //        // TODO: implement

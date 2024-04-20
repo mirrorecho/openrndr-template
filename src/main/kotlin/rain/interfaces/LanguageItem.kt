@@ -1,5 +1,6 @@
 package rain.interfaces
 
+// TODO: this extra inheritance is odd here...
 interface Labelable<T: LanguageItem> {
     val label: LabelInterface<out T>
 }

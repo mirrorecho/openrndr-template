@@ -10,7 +10,10 @@ open class Node(
     companion object : NodeCompanion<Node>( rootLabel {k->Node(k) } )
     override val label:NodeLabel<out Node> = Node.label
 
-    override val selectFrom get() = sequence { yield(this@Node)  }.select()
+    override val context get() = label.context
+    override val graph get() = context.graph
+
+    override val selectMe get() = SelectNodes(keys=listOf(this.key))
     override val labelName get() = label.labelName
 
     protected open val targetProperties:List<KProperty0<CachedTarget<out Node>>> = listOf()
@@ -27,35 +30,15 @@ open class Node(
     fun <T:Node>cachedTarget(rLabel: RelationshipLabel, nLabel: NodeLabel<T>) =
         CachedTarget(this, rLabel, nLabel)
 
-    fun r(
-        label:RelationshipLabel,
-        keys:List<String>?=null,
-        properties:Map<String,Any>?=null,
-        direction: SelectDirection = SelectDirection.RIGHT,
-    ): SelectRelationships =
-        select.r(
-            label,
-            keys,
-            properties,
-            direction
-        )
-
-    fun <T:Node>targets(
-        rLabel:RelationshipLabel, // TODO: add default label
-        nLabel:NodeLabel<T>,
-    ): T? = r(
-        rLabel,
-        direction = SelectDirection.RIGHT
-    ).n(nLabel).first
-
-    fun <T:Node>targetsOrMake(
-        rLabel:RelationshipLabel, // TODO: add default label
-        nLabel:NodeLabel<T>,
-        targetKey: String = autoKey()
-    ): T {
-        targets(rLabel, nLabel)?.let { return it }
-        return nLabel.merge(targetKey).also { this.relate(rLabel, it) }
-    }
+    // TODO: maybe implement this...?
+//    fun <T:Node>targetsOrMake(
+//        rLabel:RelationshipLabel, // TODO: add default label
+//        nLabel:NodeLabel<T>,
+//        targetKey: String = autoKey()
+//    ): T {
+//        this[rLabel()](nLabel).firstOrNull()?.let { return it }
+//        return nLabel.merge(targetKey).also { this.relate(rLabel, it) }
+//    }
 
     // TODO: maybe implement this...?
 //    fun invoke()

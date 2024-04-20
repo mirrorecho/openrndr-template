@@ -1,8 +1,15 @@
 package rain.language
 
+import rain.interfaces.ContextInterface
+import rain.interfaces.NodeSelectable
 import rain.utils.autoKey
 
-open class NodeCompanion<T:Node>(val label: NodeLabel<T> ) {
+open class NodeCompanion<T:Node>(val label: NodeLabel<T> ): NodeSelectable {
+
+    override val context: ContextInterface get() = label.context
+
+    override val labelName = label.labelName
+    override val selectMe = label.selectMe
 
     fun read(key:String):T {
         return label.factory(key).apply { context.graph.read(this) }
@@ -11,20 +18,6 @@ open class NodeCompanion<T:Node>(val label: NodeLabel<T> ) {
     fun merge(key:String = autoKey(), properties:Map<String,Any?>?=null, block:( T.()->Unit )?=null ):T = label.merge(key, properties, block)
 
     fun create(key:String = autoKey(), properties:Map<String,Any?>?=null, block:( T.()->Unit )?=null ):T = label.create(key, properties, block)
-
-    fun select(
-        keys:List<String>?=null,
-        properties:Map<String,Any>?=null,
-    ) = label.select(keys, properties)
-
-    // TODO: implement
-//    fun select(
-//        keys:List<String>?=null,
-//        properties:Map<String,Any>?=null,
-//        direction:SelectDirection?=null,
-//    ):Select<T> {
-//        return Select(context, )
-//    }
 
     inline fun <reified CT:T>childLabel(noinline factory:(String)->CT): NodeLabel<CT> {
         val name = CT::class.simpleName ?: "Item"

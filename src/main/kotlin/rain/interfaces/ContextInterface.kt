@@ -34,6 +34,14 @@ interface ContextInterface {
 
     fun <T>getFancyProperty(universalName: String): FancyProperty<T>
 
+    fun <T: LanguageNode>selectNodes(select: SelectInterface, label: NodeLabelInterface<T>):Sequence<T>
+
+    fun <T: LanguageRelationship>selectRelationships(select: SelectInterface, label: RelationshipLabelInterface<T>):Sequence<T>
+
+    fun selectNodeKeys(select: SelectInterface): Sequence<String>
+
+    fun selectRelationshipKeys(select: SelectInterface): Sequence<String>
+
 }
 
 //@property

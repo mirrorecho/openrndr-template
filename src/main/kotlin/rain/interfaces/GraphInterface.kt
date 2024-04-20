@@ -1,5 +1,7 @@
 package rain.interfaces
 
+import rain.graph.GraphNode
+
 
 interface GraphInterface {
 
@@ -34,9 +36,9 @@ interface GraphInterface {
 
     fun deleteRelationship(key: String)
 
-    fun <T: LanguageNode>selectNodes(select: SelectInterface, label: NodeLabelInterface<T>):Sequence<T>
+    fun selectGraphNodes(select: SelectInterface): Sequence<GraphableNode>
 
-    fun <T: LanguageRelationship>selectRelationships(select: SelectInterface, label: RelationshipLabelInterface<T>):Sequence<T>
+    fun selectGraphRelationships(select: SelectInterface): Sequence<GraphableRelationship>
 
 //    fun <T: LanguageItem>selectItems(select: SelectInterface, factory:):Sequence<T>
 

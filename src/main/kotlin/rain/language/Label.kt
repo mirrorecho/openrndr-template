@@ -7,21 +7,18 @@ class NodeLabel<T:Node>(
     override val factory: (String)->T,
     override val isRoot: Boolean = false,
     parentNames:List<String>,
-): NodeLabelInterface<T> {
+): NodeSelectable, NodeLabelInterface<T> {
     override val allNames: List<String> = listOf(labelName) + parentNames
+    override val selectMe = SelectNodes(labelName=this.labelName)
 
     override var context: ContextInterface = LocalContext
-
-    fun select(
-        vararg keys:String,
-        properties:Map<String,Any>?=null,
-    ) = SelectNodes(keys.asList(), properties, labelName)
 }
 
 
 class RelationshipLabel(
     override val labelName:String,
-): RelationshipLabelInterface<Relationship> {
+): RelationshipSelectable, RelationshipLabelInterface<Relationship> {
+    override val selectMe = SelectRelationships(labelName=this.labelName)
     override val allNames: List<String> = listOf(labelName)
 
     override var context: ContextInterface = LocalContext
@@ -30,18 +27,23 @@ class RelationshipLabel(
         return Relationship(key, this, sourceKey, targetKey)
     }
 
-    fun left(vararg keys:String, properties:Map<String,Any>?=null, labelName:String? = null)
-        = select(direction = SelectDirection.LEFT).n(*keys, properties=properties, labelName=labelName)
+    operator fun invoke(keys:List<String>?=null, properties: Map<String, Any>?= null, label:NodeLabel<*>?=null) =
+        SelectRelationships(labelName=this.labelName, direction=SelectDirection.RIGHT).nodes(keys, properties, label?.labelName)
 
-    fun select(
-        vararg keys:String,
-        direction: SelectDirection? = SelectDirection.RIGHT,
-    ) = SelectRelationships(keys.asList(), null, labelName, direction)
+    operator fun invoke(vararg keys:String, label:NodeLabel<*>?=null) =
+        invoke(keys.asList(), null, label)
 
-    fun select(
-        properties:Map<String,Any>?=null,
-        direction: SelectDirection? = SelectDirection.RIGHT,
-    ) = SelectRelationships(null, properties, labelName, direction)
+    operator fun invoke(properties: Map<String, Any>?= null, label:NodeLabel<*>?=null) =
+        invoke(null, properties, label)
+
+    fun left(keys:List<String>?=null, properties: Map<String, Any>?= null, label:NodeLabel<*>?=null) =
+        SelectRelationships(labelName=this.labelName, direction=SelectDirection.LEFT).nodes(keys, properties, label?.labelName)
+
+    fun left(vararg keys:String, label:NodeLabel<*>?=null) =
+        left(keys.asList(), null, label)
+
+    fun left(properties: Map<String, Any>?= null, label:NodeLabel<*>?=null) =
+        left(null, properties, label)
 
 }
 

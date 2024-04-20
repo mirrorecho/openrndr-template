@@ -6,18 +6,18 @@ class CachedTarget<T:Node>(
     val rLabel: RelationshipLabel,
     val nLabel: NodeLabel<T>,
 ) {
-    val rQuery = sourceNode.r(rLabel)
-    val query = rQuery.n(nLabel)
-    private var _cachedValue:T? = query.first
+    val rQuery = sourceNode.relates(label=rLabel)
+    val query = rQuery.nodes()
+    private var _cachedValue:T? = query(nLabel).firstOrNull()
 
     var target: T? get() {
         _cachedValue?.let { return it }
-        _cachedValue = query.first
+        _cachedValue = query(nLabel).firstOrNull()
         return _cachedValue
     }
         set(value) {
             _cachedValue = value
-            rQuery.first?.delete()
+            rQuery(rLabel).firstOrNull()?.delete()
             value?.let { sourceNode.relate(rLabel, it) }
         }
 

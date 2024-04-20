@@ -11,7 +11,10 @@ open class Relationship(
     var targetKey: String,
 ): LanguageRelationship, RelationshipSelectable, Item(key) {
 
-    override val selectFrom get() = sequence { yield(this@Relationship)  }.select(labelName)
+    override val context get() = label.context
+    override val graph get() = context.graph
+
+    override val selectMe get() = SelectRelationships(keys=listOf(this.key))
     override val labelName get() = label.labelName
 
     override fun toString():String = "(${source.key} $labelName ${target.key} | $key) $properties"

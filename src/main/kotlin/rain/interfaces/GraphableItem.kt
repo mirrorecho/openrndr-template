@@ -20,7 +20,10 @@ interface GraphableItem {
 
     val properties: MutableMap<String, Any?>
 
-    operator fun get(name:String) = this.properties[name]
+    // TODO: bring this back?
+//    operator fun get(name:String) = this.properties[name]
+
+//    fun <T>getAs(): T = this.properties.
 
     operator fun set(name:String, value:Any?) { this.properties[name]=value }
 

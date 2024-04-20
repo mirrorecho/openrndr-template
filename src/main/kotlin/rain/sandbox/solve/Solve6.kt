@@ -10,34 +10,39 @@ import rain.rndr.nodes.*
 import rain.rndr.relationships.*
 
 
+
 fun main() {
 
-    val graph = LocalContext.graph as Graph
+//    Event.create("CIRCLE-ANIM-1", mapOf("machine" to Circle.label)) {
+    Event.create("CIRCLE-ANIM-1") {
+        relate(TRIGGERS, Circle.create {  })
 
-    val t = Tree.create("T0", mapOf("yo" to 0)) {
         extend(
-            Tree.create("T1", mapOf("yo" to 1)) {
-                extend(
-                    Leaf.create("T1-1"),
-                    Leaf.create("T1-2", mapOf("yo" to 2)),
-                    Leaf.create {  },
-                )
-            },
-            Leaf.create {  },
-            Leaf.create("T4", mapOf("yo" to 4)),
+            Event.create(properties = mapOf("machinePath" to listOf(FILL_COLOR, H))) {
+                stream("dur", 1.0, 2.0, 0.4, 4.0)
+                stream("value", 22.0, 29.0, 4.0, 99.0)
+            }
         )
+
     }
+
+
 //
 //    val tSelect = SelectRelationships(CONTAINS)
 //
 ////    println(SelectRelationships(CONTAINS).asSequence().toList().size)
 //
-////    val tSelect = SelectNodes(Tree.label, listOf("T1", "T2"))
+//    val tSelect = Event.label.select("T0", "T1")[CONTAINS()]
+//    val tSelect = t(CONTAINS(), )
+//    val tNodes1 = t.path(CUES_FIRST(), CUES(), CUES_LAST(), CUES())(Node.label)
+//    val tSelect = t[CONTAINS()]
 ////    val tSelect = SelectNodes(Tree.label, listOf("T1", "T4")).r(CONTAINS).n(Node.label)
-    val tSelect = t.leaves
+//    val tSelect = t.leaves
+
 ////    val tSelect = SelectRelationships(TARGETS)
     println("----------------------------------------")
-    tSelect.forEach { println(it) }
+//    tSelect.forEach { print("${it.key}:"); println( it.getUp<Any>("yo")) }
+//    tSelect(CONTAINS).forEach { println(it) }
 
 
 ////    tSelect.forEach { println(it); println(" - target: ${it.targetKey}") }

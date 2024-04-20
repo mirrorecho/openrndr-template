@@ -31,6 +31,29 @@ open class Context<G:GraphInterface>(
         return fancyProperties[universalName] as FancyProperty<T>
     }
 
+    override fun <T : LanguageNode>selectNodes(select: SelectInterface, label:NodeLabelInterface<T>): Sequence<T> = sequence {
+        graph.selectGraphNodes(select).forEach {
+            yield(label.from(it))
+        }
+    }
+
+    override fun <T : LanguageRelationship>selectRelationships(select: SelectInterface, label:RelationshipLabelInterface<T>): Sequence<T> = sequence {
+        graph.selectGraphRelationships(select).forEach {
+            yield(label.from(it))
+        }
+    }
+
+    override fun selectNodeKeys(select: SelectInterface): Sequence<String> = sequence {
+        graph.selectGraphNodes(select).forEach {
+            yield(it.key)
+        }
+    }
+
+    override fun selectRelationshipKeys(select: SelectInterface): Sequence<String> = sequence {
+        graph.selectGraphRelationships(select).forEach {
+            yield(it.key)
+        }
+    }
 
 
 }
