@@ -19,8 +19,8 @@ interface MachinePattern {
 abstract class Machine(
     key:String = rain.utils.autoKey(),
 ): MachinePattern, Node(key) {
-    companion object : NodeCompanion<Machine>(Node.childLabel { k -> Node(k) as Machine })
-    override val label: NodeLabel<out Machine> = Machine.label
+    companion object : NodeLabel<Machine>(Machine::class, Node, { k -> Node(k) as Machine })
+    override val label: NodeLabel<out Machine> = Machine
 
     override fun trigger(event: Event) {
         // TODO: implement
@@ -33,8 +33,8 @@ abstract class Machine(
 open class Printer(
     key:String = rain.utils.autoKey(),
 ): MachinePattern, Machine(key) {
-    companion object : NodeCompanion<Printer>(Machine.childLabel { k -> Printer(k) })
-    override val label: NodeLabel<out Printer> = Printer.label
+    companion object : NodeLabel<Printer>(Printer::class, Machine, { k -> Printer(k) })
+    override val label: NodeLabel<out Printer> = Printer
 
     override fun trigger(event: Event) {
         // TODO: implement

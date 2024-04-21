@@ -10,14 +10,14 @@ import org.openrndr.Program
 open class Circle(
     key:String = autoKey(),
     ): RndrMachine(key) {
-    companion object : NodeCompanion<Circle>(RndrMachine.childLabel { k -> Circle(k) })
-    override val label: NodeLabel<out Circle> = Circle.label
+    companion object : NodeLabel<Circle>(Circle::class, RndrMachine, { k -> Circle(k) })
+    override val label: NodeLabel<out Circle> = Circle
 
-    var radius = cachedTarget(RADIUS, Value.label)
-    var strokeWeight = cachedTarget(STROKE_WEIGHT, Value.label)
-    var strokeColor = cachedTarget(STROKE_COLOR, Color.label)
-    val fillColor = cachedTarget(FILL_COLOR, Color.label)
-    val position = cachedTarget(POSITION, Position.label)
+    var radius = cachedTarget(RADIUS, Value)
+    var strokeWeight = cachedTarget(STROKE_WEIGHT, Value)
+    var strokeColor = cachedTarget(STROKE_COLOR, Color)
+    val fillColor = cachedTarget(FILL_COLOR, Color)
+    val position = cachedTarget(POSITION, Position)
 //
     override val targetProperties = listOf(::radius, ::strokeWeight, ::strokeColor, ::fillColor, ::position)
 

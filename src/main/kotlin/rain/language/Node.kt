@@ -7,8 +7,8 @@ import kotlin.reflect.KProperty0
 open class Node(
     key:String = autoKey(),
 ): LanguageNode, NodeSelectable, Item(key) {
-    companion object : NodeCompanion<Node>( rootLabel {k->Node(k) } )
-    override val label:NodeLabel<out Node> = Node.label
+    companion object : NodeLabel<Node>(Node::class, null, {k->Node(k) })
+    override val label:NodeLabel<out Node> = Node
 
     override val context get() = label.context
     override val graph get() = context.graph
@@ -63,6 +63,10 @@ open class Node(
 open class SpecialNode(
     key:String = autoKey(),
 ): Node(key) {
-    companion object : NodeCompanion<SpecialNode>(Node.childLabel { k -> SpecialNode(k) })
-    override val label: NodeLabel<out SpecialNode> = SpecialNode.label
+    companion object : NodeLabel<SpecialNode>(SpecialNode::class, Node, { k -> SpecialNode(k) })
+    override val label: NodeLabel<SpecialNode> = SpecialNode
+
+
+//    companion object : NodeCompanion<SpecialNode>(Node.childLabel { k -> SpecialNode(k) })
+//    override val label: NodeLabel<out SpecialNode> = SpecialNode.label
 }

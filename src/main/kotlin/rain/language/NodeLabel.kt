@@ -1,27 +1,29 @@
 package rain.language
 
+import rain.graph.GraphNode
 import rain.interfaces.*
+import rain.utils.autoKey
+import kotlin.reflect.KClass
 
-class NodeLabel<T:Node>(
-    override val labelName:String,
+open class NodeLabel<T:Node>(
+    myClass: KClass<T>,
+    parentLabel:NodeLabel<*>? = null,
     override val factory: (String)->T,
-    override val isRoot: Boolean = false,
-    parentNames:List<String>,
-): NodeSelectable, NodeLabelInterface<T> {
-    override val allNames: List<String> = listOf(labelName) + parentNames
-    override val selectMe = SelectNodes(labelName=this.labelName)
+    ): NodeSelectable, NodeLabelInterface<T> {
+
+    private fun getName(cl:KClass<T>) = cl.simpleName ?: "Node"
+
+    override val isRoot: Boolean = parentLabel==null
+
+    override val labelName:String = getName(myClass)
+
+    override val allNames: List<String> = listOf(getName(myClass)) + parentLabel?.allNames.orEmpty()
+    override val selectMe:SelectNodes = SelectNodes(labelName=getName(myClass))
+
     override var context: ContextInterface = LocalContext // TODO: ok to just default to LocalContext here?
-    private val registry = NodeRegistry(label=this)
 
-    override fun paletteGetOrPut(key:String, defaultNode:()->T):T = registry.getOrPut(key, defaultNode)
+    override val registry: MutableMap<String, T> = mutableMapOf()
 
-}
 
-inline fun <reified T:Node>rootLabel(noinline factory:(String)->T): NodeLabel<T> {
-    return NodeLabel(
-        T::class.simpleName ?: "Item",
-        factory,
-        true,
-        listOf(),
-    )
+
 }

@@ -31,11 +31,9 @@ open class Context<G:GraphInterface>(
         return fancyProperties[universalName] as FancyProperty<T>
     }
 
-    override fun <T : LanguageNode>selectNodes(select: SelectInterface, label:NodeLabelInterface<T>, fromPalette:Boolean): Sequence<T> = sequence {
+    override fun <T : LanguageNode>selectNodes(select: SelectInterface, label:NodeLabelInterface<T>): Sequence<T> = sequence {
         graph.selectGraphNodes(select).forEach {
-            // TODO: implement...
-            if (fromPalette) yield(label.)
-            else yield(label.from(it))
+            yield(label.from(it))
         }
     }
 

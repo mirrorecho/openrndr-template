@@ -11,13 +11,13 @@ import org.openrndr.color.ColorRGBa
 open class Color(
     key:String = autoKey(),
 ): RndrMachine(key) {
-    companion object : NodeCompanion<Color>(RndrMachine.childLabel { k -> Color(k) })
-    override val label: NodeLabel<out Color> = Color.label
+    companion object : NodeLabel<Color>(Color::class, RndrMachine, { k -> Color(k) })
+    override val label: NodeLabel<out Color> = Color
 
-    val h = cachedTarget(H, Value.label)
-    val s = cachedTarget(S, Value.label)
-    val v = cachedTarget(V, Value.label)
-    val a = cachedTarget(A, Value.label)
+    val h = cachedTarget(H, Value)
+    val s = cachedTarget(S, Value)
+    val v = cachedTarget(V, Value)
+    val a = cachedTarget(A, Value)
 
     override val targetProperties = listOf(::h, ::s, ::v, ::a)
 

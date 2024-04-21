@@ -12,11 +12,11 @@ import org.openrndr.math.Vector2
 open class Position(
     key:String = autoKey(),
 ): RndrMachine(key) {
-    companion object : NodeCompanion<Position>(RndrMachine.childLabel { k -> Position(k) })
-    override val label: NodeLabel<out Position> = Position.label
+    companion object : NodeLabel<Position>(Position::class, RndrMachine, { k -> Position(k) })
+    override val label: NodeLabel<out Position> = Position
 
-    val x = cachedTarget(X, Value.label)
-    val y = cachedTarget(Y, Value.label)
+    val x = cachedTarget(X, Value)
+    val y = cachedTarget(Y, Value)
 
     override val targetProperties = listOf(::x, ::y)
 

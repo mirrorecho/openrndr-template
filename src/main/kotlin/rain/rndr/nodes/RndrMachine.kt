@@ -17,8 +17,8 @@ import rain.patterns.nodes.Event
 abstract class RndrMachine(
     key:String = autoKey(),
 ): MachinePattern, Machine(key) { // TODO: is Leaf the best parent class? (Relationships might not be simple tree patterns.)
-    companion object : NodeCompanion<RndrMachine>(Machine.childLabel { k -> Node(k) as RndrMachine })
-    override val label: NodeLabel<out RndrMachine> = RndrMachine.label
+    companion object : NodeLabel<RndrMachine>(RndrMachine::class, Machine, { k -> Node(k) as RndrMachine })
+    override val label: NodeLabel<out RndrMachine> = RndrMachine
 
 
 //    TODO: implement below if implementing Pattern interface for Machine ...

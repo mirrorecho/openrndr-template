@@ -15,23 +15,29 @@ interface NodeLabelInterface<T:LanguageNode>: LabelInterface<T> {
 
     val factory: (String)->T
 
-    fun paletteGetOrPut(key:String, defaultNode:()->T):T
+    val registry: MutableMap<String, T>
 
-    fun from(gNode:GraphableNode):T =
-        factory(gNode.key).apply { updatePropertiesFrom(gNode) }
+    fun from(gNode:GraphableNode):T = registry.getOrPut(gNode.key) {
+        factory(gNode.key).apply {
+            updatePropertiesFrom(gNode)
+            registry[key] = this
+        }
+    }
+
 
     fun merge(key:String = autoKey(), properties:Map<String,Any?>?=null, block:( T.()->Unit )?=null ):T =
-        factory(key).apply {
-            properties?.let{ this.properties.putAll(it) };
-            mergeMe();
-            block?.invoke(this);
+        registry.getOrPut(key) { factory(key) }.also { node->
+            properties?.let{ node.updatePropertiesFrom(it) };
+            context.graph.merge(node)
+            block?.invoke(node)
         }
 
     fun create(key:String = autoKey(), properties:Map<String,Any?>?=null, block:( T.()->Unit )?=null ):T =
         factory(key).apply {
-            properties?.let{ this.properties.putAll(it) };
-            createMe();
-            block?.invoke(this);
+            properties?.let{ this.updatePropertiesFrom(it) }
+            context.graph.create(this)
+            registry[key] = this
+            block?.invoke(this)
         }
 
 }
@@ -49,14 +55,14 @@ interface RelationshipLabelInterface<T:LanguageRelationship>: LabelInterface<T> 
     fun merge(sourceKey:String, targetKey:String, key:String, properties:Map<String,Any?>?=null, block:( T.()->Unit )?=null ):T =
         factory(sourceKey, targetKey, key).apply {
             properties?.let{ this.properties.putAll(it) };
-            mergeMe();
+            context.graph.merge(this);
             block?.invoke(this);
         }
 
     fun create(sourceKey:String, targetKey:String, key:String = autoKey(), properties:Map<String,Any?>?=null, block:( T.()->Unit )?=null ):T =
         factory(sourceKey, targetKey, key).apply {
             properties?.let{ this.properties.putAll(it) };
-            createMe();
+            context.graph.create(this);
             block?.invoke(this);
         }
 

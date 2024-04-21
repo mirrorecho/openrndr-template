@@ -9,8 +9,8 @@ import rain.patterns.relationships.*
 open class Cue(
     key:String = rain.utils.autoKey(),
 ): Node(key) {
-    companion object : NodeCompanion<Cue>(Node.childLabel { k -> Cue(k) })
-    override val label: NodeLabel<out Cue> = Cue.label
+    companion object : NodeLabel<Cue>(Cue::class, Node, { k -> Cue(k) })
+    override val label: NodeLabel<out Cue> = Cue
 
     // TODO: these all need tests!
     // also TODO: should these be by lazy?

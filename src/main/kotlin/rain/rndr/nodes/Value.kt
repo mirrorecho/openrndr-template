@@ -11,8 +11,8 @@ class AnimationValue(
 open class Value(
     key:String = autoKey(),
     ): RndrMachine(key) {
-    companion object : NodeCompanion<Value>(RndrMachine.childLabel { k -> Value(k) })
-    override val label: NodeLabel<out Value> = Value.label
+    companion object : NodeLabel<Value>(Value::class, RndrMachine, { k -> Value(k) })
+    override val label: NodeLabel<out Value> = Value
 
     var animationValue = AnimationValue(0.0)
 

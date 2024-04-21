@@ -44,7 +44,7 @@ open class SelectNodes(
 
     override fun selectKeys(): Sequence<String> = context.selectNodeKeys(this)
 
-    fun indexOfFirst(key:String): Int = this(Node.label).indexOfFirst {it.key==key}
+    fun indexOfFirst(key:String): Int = selectKeys().indexOfFirst {it==key}
 
     fun contains(key: String): Boolean = this.indexOfFirst(key) > -1
 

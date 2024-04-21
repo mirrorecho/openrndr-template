@@ -20,15 +20,16 @@ interface LanguageItem: GraphableItem, Labelable<LanguageItem>  {
 // ===========================================================================================================
 
 interface LanguageNode: LanguageItem, GraphableNode {
+    override val label: NodeLabelInterface<out LanguageNode>
+
     fun save() = graph.save(this)
 
     fun read() = graph.read(this)
 
-    fun delete() = graph.deleteNode(this.key)
-
-    fun mergeMe() = graph.merge(this) // TODO maybe: rename to merge?
-
-    fun createMe() = graph.create(this) // TODO maybe: rename to create?
+    fun delete() {
+        graph.deleteNode(this.key)
+        label.registry.remove(this.key)
+    }
 
 }
 
@@ -41,7 +42,7 @@ interface LanguageRelationship: LanguageItem, GraphableRelationship {
 
     fun delete() = graph.deleteRelationship(this.key)
 
-    fun mergeMe() = graph.merge(this) // TODO maybe: rename to merge?
-
-    fun createMe() = graph.create(this) // TODO maybe: rename to create?
+//    fun mergeMe() = graph.merge(this) // TODO maybe: rename to merge?
+//
+//    fun createMe() = graph.create(this) // TODO maybe: rename to create?
 }
