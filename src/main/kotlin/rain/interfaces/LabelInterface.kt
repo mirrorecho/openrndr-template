@@ -15,6 +15,8 @@ interface NodeLabelInterface<T:LanguageNode>: LabelInterface<T> {
 
     val factory: (String)->T
 
+    fun paletteGetOrPut(key:String, defaultNode:()->T):T
+
     fun from(gNode:GraphableNode):T =
         factory(gNode.key).apply { updatePropertiesFrom(gNode) }
 

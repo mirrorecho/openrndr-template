@@ -1,19 +1,9 @@
 package rain.language
 
-import rain.interfaces.*
-
-class NodeLabel<T:Node>(
-    override val labelName:String,
-    override val factory: (String)->T,
-    override val isRoot: Boolean = false,
-    parentNames:List<String>,
-): NodeSelectable, NodeLabelInterface<T> {
-    override val allNames: List<String> = listOf(labelName) + parentNames
-    override val selectMe = SelectNodes(labelName=this.labelName)
-
-    override var context: ContextInterface = LocalContext
-}
-
+import rain.interfaces.ContextInterface
+import rain.interfaces.RelationshipLabelInterface
+import rain.interfaces.RelationshipSelectable
+import rain.interfaces.SelectDirection
 
 class RelationshipLabel(
     override val labelName:String,
@@ -28,7 +18,7 @@ class RelationshipLabel(
     }
 
     operator fun invoke(keys:List<String>?=null, properties: Map<String, Any>?= null, label:NodeLabel<*>?=null) =
-        SelectRelationships(labelName=this.labelName, direction=SelectDirection.RIGHT).nodes(keys, properties, label?.labelName)
+        SelectRelationships(labelName=this.labelName, direction= SelectDirection.RIGHT).nodes(keys, properties, label?.labelName)
 
     operator fun invoke(vararg keys:String, label:NodeLabel<*>?=null) =
         invoke(keys.asList(), null, label)
@@ -37,7 +27,7 @@ class RelationshipLabel(
         invoke(null, properties, label)
 
     fun left(keys:List<String>?=null, properties: Map<String, Any>?= null, label:NodeLabel<*>?=null) =
-        SelectRelationships(labelName=this.labelName, direction=SelectDirection.LEFT).nodes(keys, properties, label?.labelName)
+        SelectRelationships(labelName=this.labelName, direction= SelectDirection.LEFT).nodes(keys, properties, label?.labelName)
 
     fun left(vararg keys:String, label:NodeLabel<*>?=null) =
         left(keys.asList(), null, label)
@@ -48,12 +38,3 @@ class RelationshipLabel(
 }
 
 val TARGETS = RelationshipLabel("TARGETS")
-
-inline fun <reified T:Node>rootLabel(noinline factory:(String)->T): NodeLabel<T> {
-    return NodeLabel(
-        T::class.simpleName ?: "Item",
-        factory,
-        true,
-        listOf(),
-    )
-}

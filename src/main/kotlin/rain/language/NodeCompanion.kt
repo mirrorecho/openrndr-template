@@ -4,6 +4,7 @@ import rain.interfaces.ContextInterface
 import rain.interfaces.NodeSelectable
 import rain.utils.autoKey
 
+// TODO maybe: should this simply be merged into the label so that the companion IS the label?
 open class NodeCompanion<T:Node>(val label: NodeLabel<T> ): NodeSelectable {
 
     override val context: ContextInterface get() = label.context
