@@ -39,11 +39,11 @@ abstract class RndrMachine(
     // TODO: useful...?
     // parentMachine?
 
-    override fun trigger(event: Event) {
+    override fun trigger(properties: Map<String, Any?>) {
         // TODO: implement gating and such
-        if (event.gate==true) {
-
-        }
+//        if (event.gate==true) {
+//
+//        }
     }
 
 

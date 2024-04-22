@@ -5,6 +5,7 @@ import rain.language.SelectNodes
 import rain.patterns.relationships.CUES
 import rain.patterns.relationships.CUES_FIRST
 import rain.patterns.relationships.CUES_NEXT
+import rain.patterns.relationships.TRIGGERS
 
 class TreeLineage<T:Tree>(
     val tree: T,
@@ -14,6 +15,8 @@ class TreeLineage<T:Tree>(
 ) {
     //TODO: below assumes that all ancestor properties should carry down... are we sure that's what we want?
     val properties: Map<String, Any?> by lazy { parent?.properties.orEmpty() + tree.properties }
+
+    override fun toString() = "TREE LINEAGE: ${ancestors.toList().reversed().map { it.tree.key }} - ${tree.labelName}(${tree.key}) $properties"
 
     fun <T>getAs(name:String):T = properties[name] as T
 
@@ -38,6 +41,10 @@ class TreeLineage<T:Tree>(
     val leaves:Sequence<TreeLineage<T>> get() = sequence {
         if (tree.isLeaf) yield(this@TreeLineage)
         else children.forEach { yieldAll(it.leaves) }
+    }
+
+    val ancestors:Sequence<TreeLineage<T>> get() = sequence {
+        parent?.let{ yield(it); yieldAll(it.ancestors); }
     }
 
     val previous get() = cue?.let{ it[CUES_NEXT.left(), CUES()].first(label) }

@@ -19,6 +19,8 @@ abstract class Tree(
 
     abstract val lineage: TreeLineage<out Tree>
 
+    abstract val lineageProperties: List<String>
+
     // replaced with cuePath below
 //    override var cachedParentage = listOf<Tree>()
 

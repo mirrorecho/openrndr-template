@@ -1,6 +1,8 @@
 package rain.patterns.nodes
 
 import rain.language.*
+import rain.machines.nodes.Machine
+import rain.patterns.relationships.TRIGGERS
 import rain.rndr.nodes.RndrMachine
 import rain.utils.autoKey
 
@@ -10,7 +12,19 @@ class Event(
     companion object : NodeLabel<Event>(Event::class, Node, { k -> Event(k) })
     override val label: NodeLabel<out Event> = Event
 
-    override val lineage: TreeLineage<Event> = TreeLineage(this, label)
+    override val lineage: TreeLineage<Event> get() = TreeLineage(this, label)
+
+    override val lineageProperties: List<String> = listOf("machinePath", "dur", "value")
+
+    val isTrigger:Boolean by this.properties.apply { putIfAbsent("isTrigger", false) }
+
+    var simultaneous: Boolean by this.properties.apply { putIfAbsent("simultaneous", true) }
+
+    val triggers = cachedTarget(TRIGGERS, Machine)
+
+    fun play() {
+        EventPlayer(TreeLineage(this, Event)).play()
+    }
 
 //    override val thisTyped = this
 
@@ -36,8 +50,6 @@ class Event(
 //        }
 
 
-    var simultaneous: Boolean by this.properties.apply { putIfAbsent("simultaneous", false) }
-
 
     // TODO: use something like this?
 //    operator fun invoke(vararg patterns: Pattern): CellTree {
@@ -52,4 +64,20 @@ class Event(
 //        return this
 //    }
 
+}
+
+// because it's used so often AND cascade doesn't make sense
+val TreeLineage<Event>.simultaneous get() = tree.simultaneous
+
+val TreeLineage<Event>.triggersMachine get() = this.tree.triggers.target ?: parent?.tree?.triggers?.target
+
+val TreeLineage<Event>.triggersPathMachine: Machine? get() = this.triggersMachine?.let {machine->
+    this.getAs<List<RelationshipLabel>?>("machinePath")?.let { rels->
+        return machine.get( *(rels.map { it() }.toTypedArray()) )(Machine).first()
+    }
+    return machine
+}
+
+fun TreeLineage<Event>.trigger() {
+    if (this.tree.isTrigger) this.triggersPathMachine?.trigger(properties)
 }

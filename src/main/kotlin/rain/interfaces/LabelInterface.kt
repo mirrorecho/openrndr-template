@@ -8,6 +8,7 @@ interface LabelInterface<T:LanguageItem> {
     val isRoot: Boolean
     val isRelationship:Boolean
     var context: ContextInterface
+
 }
 
 interface NodeLabelInterface<T:LanguageNode>: LabelInterface<T> {
@@ -17,12 +18,19 @@ interface NodeLabelInterface<T:LanguageNode>: LabelInterface<T> {
 
     val registry: MutableMap<String, T>
 
-    fun from(gNode:GraphableNode):T = registry.getOrPut(gNode.key) {
-        factory(gNode.key).apply {
-            updatePropertiesFrom(gNode)
-            registry[key] = this
+    fun get(key:String):T =
+        registry.getOrPut(key) {
+            factory(key).apply {
+                context.graph.read(this)
+            }
         }
-    }
+
+    fun from(gNode:GraphableNode):T =
+        registry.getOrPut(gNode.key) {
+            factory(gNode.key).apply {
+                updatePropertiesFrom(gNode)
+            }
+        }
 
 
     fun merge(key:String = autoKey(), properties:Map<String,Any?>?=null, block:( T.()->Unit )?=null ):T =

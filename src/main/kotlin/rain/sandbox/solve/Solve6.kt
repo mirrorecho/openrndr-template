@@ -3,6 +3,7 @@ package rain.sandbox.solve
 import rain.graph.Graph
 import rain.interfaces.SelectDirection
 import rain.language.*
+import rain.machines.nodes.Printer
 
 import rain.patterns.nodes.*
 import rain.patterns.relationships.*
@@ -14,18 +15,24 @@ import rain.rndr.relationships.*
 fun main() {
 
 //    Event.create("CIRCLE-ANIM-1", mapOf("machine" to Circle.label)) {
-    Event.create("CIRCLE-ANIM-1") {
-        relate(TRIGGERS, Circle.create {  })
+    val e = Event.create("CIRCLE-ANIM-1") {
+        relate(TRIGGERS, Printer.create {  })
+        stream("gate", true)
 
         extend(
-            Event.create(properties = mapOf("machinePath" to listOf(FILL_COLOR, H))) {
+            Event.create(properties = mapOf("simultaneous" to false)) {
                 stream("dur", 1.0, 2.0, 0.4, 4.0)
                 stream("value", 22.0, 29.0, 4.0, 99.0)
             }
         )
+        extend( Event.create (properties = mapOf("gate" to false)))
 
     }
 
+    e.play()
+
+
+//    e.lineage.nodes.forEach { println(it) }
 
 //
 //    val tSelect = SelectRelationships(CONTAINS)

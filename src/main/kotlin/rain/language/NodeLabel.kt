@@ -24,6 +24,6 @@ open class NodeLabel<T:Node>(
 
     override val registry: MutableMap<String, T> = mutableMapOf()
 
-
+    override fun toString() = labelName
 
 }

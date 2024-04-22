@@ -1,4 +1,53 @@
-package rain.rndr
+package rain.patterns.nodes
+
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.delay
+import org.openrndr.Program
+import org.openrndr.application
+import org.openrndr.launch
+import rain.language.Node
+import rain.language.NodeLabel
+import rain.patterns.relationships.*
+import rain.utils.autoKey
+import kotlin.time.DurationUnit
+import kotlin.time.toDuration
+
+
+// just for fiddling around purposes...
+open class EventPlayer(
+    val treeLineageEvent: TreeLineage<Event>
+) {
+
+    private suspend fun playEvent(tlEvent: TreeLineage<Event>, program: Program,  addDelay: Double?=null) {
+        tlEvent.trigger()
+        addDelay?.let { delay(it.toDuration(DurationUnit.SECONDS)) }
+        if (tlEvent.parent?.simultaneous==true && !tlEvent.simultaneous)
+            program.launch { playEventChildren(tlEvent, program) }
+        else
+            playEventChildren(tlEvent, program)
+    }
+
+
+    private suspend fun playEventChildren(tlEvent: TreeLineage<Event>, program: Program) {
+        tlEvent.children.forEach {
+            if (tlEvent.tree.simultaneous)
+                playEvent(it, program)
+            else
+                playEvent(it, program, it.getAs("dur"))
+        }
+    }
+
+
+    fun play() = application {
+        treeLineageEvent.let { tlEvent ->
+            program {
+                playEvent(tlEvent, this)
+            }
+        }
+    }
+}
+
+
 
 //
 //class Score(

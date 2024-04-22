@@ -13,6 +13,8 @@ class RelationshipLabel(
 
     override var context: ContextInterface = LocalContext
 
+    override fun toString() = labelName
+
     override fun factory(sourceKey:String, targetKey:String, key:String): Relationship {
         return Relationship(key, this, sourceKey, targetKey)
     }
